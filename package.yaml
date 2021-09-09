@@ -1,0 +1,102 @@
+name:                findata-funnel
+version:             0.1.0.0
+github:              "gregorias/findata-funnel"
+license:             AGPL-3
+author:              "Grzegorz Milka"
+maintainer:          "grzegorzmilka@gmail.com"
+copyright:           "Copyright (c) 2021 Grzegorz Milka"
+
+extra-source-files:
+- README.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/gregorias/findata-funnel#readme>
+
+# Some defaults recommended by https://kowainik.github.io/posts/2019-02-06-style-guide#default-extensions
+# Also use Relude
+default-extensions:
+  BangPatterns
+  DataKinds
+  DeriveDataTypeable
+  DeriveFoldable
+  DeriveFunctor
+  DeriveGeneric
+  DeriveTraversable
+  DerivingStrategies
+  DerivingVia
+  FlexibleContexts
+  FlexibleInstances
+  FunctionalDependencies
+  GADTs
+  GeneralisedNewtypeDeriving
+  InstanceSigs
+  LambdaCase
+  MultiParamTypeClasses
+  MultiWayIf
+  NoImplicitPrelude
+  NumericUnderscores
+  OverloadedLabels
+  OverloadedLists
+  OverloadedStrings
+  PatternSynonyms
+  QuasiQuotes
+  ScopedTypeVariables
+  StandaloneDeriving
+  TupleSections
+  TypeApplications
+  TypeFamilies
+  TypeOperators
+  UnicodeSyntax
+  ViewPatterns
+
+dependencies:
+- base >= 4.13 && < 5
+- relude
+
+# no-type-defaults, this is dangerous, but in terms of convenience it's so
+# useful to use ExtendedDefaultRules that I keep it.
+ghc-options:
+  - -Wall
+  - -Wcompat
+  - -Wmissing-deriving-strategies
+  - -Widentities
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wmissing-export-lists
+  - -Wpartial-fields
+  - -Wredundant-constraints
+  - -Wno-type-defaults
+  - -Wno-partial-type-signatures
+
+library:
+  source-dirs: src
+  ghc-options:
+  - -Wunused-packages
+
+executables:
+  findata-funnel:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wunused-packages
+    dependencies:
+    - findata-funnel
+
+tests:
+  findata-funnel-test:
+    main:                Main.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wunused-packages
