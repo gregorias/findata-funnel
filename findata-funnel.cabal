@@ -24,7 +24,9 @@ source-repository head
 
 library
   exposed-modules:
+      FindataFetcher
       Lib
+      Mail
   other-modules:
       Paths_findata_funnel
   hs-source-dirs:
@@ -33,8 +35,13 @@ library
       BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedLists OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
   ghc-options: -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wunused-packages
   build-depends:
-      base >=4.13 && <5
+      Glob
+    , base >=4.13 && <5
+    , foldl
+    , mtl
     , relude
+    , text
+    , turtle
   default-language: Haskell2010
 
 executable findata-funnel

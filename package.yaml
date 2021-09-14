@@ -78,6 +78,12 @@ library:
   source-dirs: src
   ghc-options:
   - -Wunused-packages
+  dependencies:
+  - foldl
+  - Glob
+  - mtl
+  - text
+  - turtle
 
 executables:
   findata-funnel:
