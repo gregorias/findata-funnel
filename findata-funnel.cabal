@@ -26,7 +26,6 @@ library
   exposed-modules:
       FindataFetcher
       Lib
-      Mail
   other-modules:
       Paths_findata_funnel
   hs-source-dirs:
