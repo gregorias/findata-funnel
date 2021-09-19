@@ -67,6 +67,7 @@ main = do
       (\(sourceName, ffSource) -> reportErrors ("Fetching" <> sourceName) $ FF.runFindataFetcher ffSource)
       [ ("Coop receipts", FF.FFSourceCoop)
       , ("EasyRide receipts", FF.FFSourceEasyRide)
+      , ("Patreon receipts", FF.FFSourcePatreon)
       ]
   anyParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
   when

@@ -13,10 +13,12 @@ import qualified Turtle
 data FindataFetcherSource
   = FFSourceCoop
   | FFSourceEasyRide
+  | FFSourcePatreon
 
 findataFetcherSourceToCommand :: FindataFetcherSource -> Text
 findataFetcherSourceToCommand FFSourceCoop = "pull-coop-receipts"
 findataFetcherSourceToCommand FFSourceEasyRide = "pull-easyride-receipts"
+findataFetcherSourceToCommand FFSourcePatreon = "pull-patreon"
 
 -- | Runs findata-fetcher
 runFindataFetcher :: (MonadError e m, MonadIO m, e ~ Text) => FindataFetcherSource -> m ()
