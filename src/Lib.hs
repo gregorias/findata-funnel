@@ -62,12 +62,15 @@ parseAndMoveCoopPdfReceipts = do
 
 main :: IO ()
 main = do
-  fetchingCoopReceiptsExitCode <-
-    reportErrors "Fetching coop receipts" $
-      FF.runFindataFetcher FF.FFSourceCoop
+  fetchingExitCodes :: [ExitCode] <-
+    mapM
+      (\(sourceName, ffSource) -> reportErrors ("Fetching" <> sourceName) $ FF.runFindataFetcher ffSource)
+      [ ("Coop receipts", FF.FFSourceCoop)
+      , ("EasyRide receipts", FF.FFSourceEasyRide)
+      ]
   anyParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
   when
-    (isExitFailure fetchingCoopReceiptsExitCode || anyParseAndMoveFailure)
+    (any isExitFailure fetchingExitCodes || anyParseAndMoveFailure)
     (exit (ExitFailure 1))
  where
   isExitFailure ExitSuccess = False

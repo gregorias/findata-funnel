@@ -10,10 +10,13 @@ import Relude
 import Turtle (ShellFailed (ShellFailed), home, pushd, sh, shells, (</>))
 import qualified Turtle
 
-data FindataFetcherSource = FFSourceCoop
+data FindataFetcherSource
+  = FFSourceCoop
+  | FFSourceEasyRide
 
 findataFetcherSourceToCommand :: FindataFetcherSource -> Text
 findataFetcherSourceToCommand FFSourceCoop = "pull-coop-receipts"
+findataFetcherSourceToCommand FFSourceEasyRide = "pull-easyride-receipts"
 
 -- | Runs findata-fetcher
 runFindataFetcher :: (MonadError e m, MonadIO m, e ~ Text) => FindataFetcherSource -> m ()
