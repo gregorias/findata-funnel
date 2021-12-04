@@ -9,7 +9,19 @@ import Data.Text.IO (hPutStr)
 import qualified FindataFetcher as FF
 import Relude
 import System.FilePath.Glob (compile, match)
-import Turtle (ExitCode (ExitFailure, ExitSuccess), Line, Shell, cd, exit, home, inproc, ls, output, rm, sh, (<.>), (</>))
+import Turtle (
+  ExitCode (ExitFailure, ExitSuccess),
+  Shell,
+  cd,
+  exit,
+  home,
+  inproc,
+  ls,
+  rm,
+  sh,
+  (<.>),
+  (</>),
+ )
 import qualified Turtle
 
 fromEither :: Either a a -> a
@@ -26,15 +38,16 @@ reportErrors name action = do
     (const $ return ExitSuccess)
     eitherErrorOrValue
 
-pdf2Txt :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> Turtle.FilePath -> m ()
-pdf2Txt pdfFile txtFile = do
-  eitherErrorOrUnit <- liftIO $
-    try @SomeException . sh $ do
-      homeDir <- home
-      let pdf2txt = fpToText $ homeDir </> Turtle.fromText ".local/bin/pdf2txt"
-      let (txtContent :: Shell Line) = inproc pdf2txt [fpToText pdfFile] mempty
-      output txtFile txtContent
-  whenLeft () eitherErrorOrUnit (\e -> throwError $ "The pdf2txt has failed: " <> show e)
+-- | Runs pdftotext utility.
+--
+-- https://en.wikipedia.org/wiki/Pdftotext
+pdftotext :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> Turtle.FilePath -> m ()
+pdftotext pdfFile txtFile = do
+  eitherErrorOrUnit <-
+    liftIO $
+      try @SomeException . sh $
+        void $ inproc "pdftotext" ["-raw", fpToText pdfFile, fpToText txtFile] mempty
+  whenLeft () eitherErrorOrUnit (\e -> throwError $ "The pdftotext has failed: " <> show e)
 
 cdDownloads :: (MonadIO io) => io ()
 cdDownloads = do
@@ -48,7 +61,7 @@ parseAndMoveCoopPdfReceipt receiptPdf = do
         homeDir
           </> Turtle.fromText "Documents/Finance/Wallet/updates/coop-receipts"
           </> (receiptPdf <.> "txt")
-  pdf2Txt receiptPdf receiptTxt
+  pdftotext receiptPdf receiptTxt
   rm receiptPdf
 
 parseAndMoveCoopPdfReceipts :: Shell ExitCode
