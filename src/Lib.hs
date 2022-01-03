@@ -81,6 +81,7 @@ main = do
       [ ("Coop receipts", FF.FFSourceCoop)
       , ("EasyRide receipts", FF.FFSourceEasyRide)
       , ("Patreon receipts", FF.FFSourcePatreon)
+      , ("Revolut statements", FF.FFSourceRevolutMail)
       ]
   anyParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
   when

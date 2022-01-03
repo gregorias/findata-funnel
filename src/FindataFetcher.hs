@@ -14,11 +14,13 @@ data FindataFetcherSource
   = FFSourceCoop
   | FFSourceEasyRide
   | FFSourcePatreon
+  | FFSourceRevolutMail
 
 findataFetcherSourceToCommand :: FindataFetcherSource -> Text
 findataFetcherSourceToCommand FFSourceCoop = "pull-coop-receipts"
 findataFetcherSourceToCommand FFSourceEasyRide = "pull-easyride-receipts"
 findataFetcherSourceToCommand FFSourcePatreon = "pull-patreon"
+findataFetcherSourceToCommand FFSourceRevolutMail = "pull-revolut-mail"
 
 -- | Runs findata-fetcher
 runFindataFetcher :: (MonadError e m, MonadIO m, e ~ Text) => FindataFetcherSource -> m ()
