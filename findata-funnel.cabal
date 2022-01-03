@@ -25,6 +25,7 @@ source-repository head
 library
   exposed-modules:
       FindataFetcher
+      Hledupt
       Lib
   other-modules:
       Paths_findata_funnel

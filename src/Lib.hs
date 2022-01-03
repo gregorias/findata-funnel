@@ -7,6 +7,7 @@ import qualified Control.Foldl as Foldl
 import Control.Monad.Except (MonadError (throwError))
 import Data.Text.IO (hPutStr)
 import qualified FindataFetcher as FF
+import Hledupt (HleduptSource (..), hledupt)
 import Relude
 import System.FilePath.Glob (compile, match)
 import Turtle (
@@ -29,6 +30,11 @@ fromEither = either id id
 
 fpToText :: Turtle.FilePath -> Text
 fpToText = fromEither . Turtle.toText
+
+getWalletDir :: (MonadIO m) => m Turtle.FilePath
+getWalletDir = do
+  homeDir <- home
+  return $ homeDir </> Turtle.fromText "Documents/Finance/Wallet"
 
 reportErrors :: (MonadIO io) => Text -> ExceptT Text io () -> io ExitCode
 reportErrors name action = do
@@ -56,10 +62,10 @@ cdDownloads = do
 
 parseAndMoveCoopPdfReceipt :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
 parseAndMoveCoopPdfReceipt receiptPdf = do
-  homeDir <- home
+  walletDir <- getWalletDir
   let receiptTxt =
-        homeDir
-          </> Turtle.fromText "Documents/Finance/Wallet/updates/coop-receipts"
+        walletDir
+          </> Turtle.fromText "updates/coop-receipts"
           </> (receiptPdf <.> "txt")
   pdftotext receiptPdf receiptTxt
   rm receiptPdf
@@ -73,6 +79,22 @@ parseAndMoveCoopPdfReceipts = do
     (reportErrors ("Parsing " <> fpToText file) $ parseAndMoveCoopPdfReceipt file)
     (match (compile "Coop *.pdf") (Turtle.encodeString file))
 
+parseAndMoveRevolutCsvStatement :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
+parseAndMoveRevolutCsvStatement stmtCsv = do
+  walletDir <- getWalletDir
+  let stmtTxt = walletDir </> Turtle.fromText "updates" </> (stmtCsv <.> "txt")
+  hledupt HleduptRevolut stmtCsv stmtTxt
+  rm stmtCsv
+
+parseAndMoveRevolutCsvStatements :: Shell ExitCode
+parseAndMoveRevolutCsvStatements = do
+  cdDownloads
+  file <- ls $ Turtle.fromText "."
+  bool
+    (return ExitSuccess)
+    (reportErrors ("Parsing " <> fpToText file) $ parseAndMoveRevolutCsvStatement file)
+    (match (compile "revolut-account-statement*.csv") (Turtle.encodeString file))
+
 main :: IO ()
 main = do
   fetchingExitCodes :: [ExitCode] <-
@@ -83,9 +105,10 @@ main = do
       , ("Patreon receipts", FF.FFSourcePatreon)
       , ("Revolut statements", FF.FFSourceRevolutMail)
       ]
-  anyParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
+  anyCoopParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
+  anyRevolutParseAndMoveFailure <- Turtle.fold parseAndMoveRevolutCsvStatements (Foldl.any isExitFailure)
   when
-    (any isExitFailure fetchingExitCodes || anyParseAndMoveFailure)
+    (any isExitFailure fetchingExitCodes || anyCoopParseAndMoveFailure || anyRevolutParseAndMoveFailure)
     (exit (ExitFailure 1))
  where
   isExitFailure ExitSuccess = False
