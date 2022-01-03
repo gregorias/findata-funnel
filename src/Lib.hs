@@ -77,7 +77,7 @@ main :: IO ()
 main = do
   fetchingExitCodes :: [ExitCode] <-
     mapM
-      (\(sourceName, ffSource) -> reportErrors ("Fetching" <> sourceName) $ FF.runFindataFetcher ffSource)
+      (\(sourceName, ffSource) -> reportErrors ("Fetching " <> sourceName) $ FF.runFindataFetcher ffSource)
       [ ("Coop receipts", FF.FFSourceCoop)
       , ("EasyRide receipts", FF.FFSourceEasyRide)
       , ("Patreon receipts", FF.FFSourcePatreon)
