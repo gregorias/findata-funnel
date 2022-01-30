@@ -79,6 +79,22 @@ parseAndMoveCoopPdfReceipts = do
     (reportErrors ("Parsing " <> fpToText file) $ parseAndMoveCoopPdfReceipt file)
     (match (compile "Coop *.pdf") (Turtle.encodeString file))
 
+moveAndParsePatreonReceipt :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
+moveAndParsePatreonReceipt stmtTxt = do
+  walletDir <- getWalletDir
+  let stmtLedger = walletDir </> Turtle.fromText "updates" </> stmtTxt
+  hledupt HleduptPatreon stmtTxt stmtLedger
+  rm stmtTxt
+
+moveAndParsePatreonReceipts :: Shell ExitCode
+moveAndParsePatreonReceipts = do
+  cdDownloads
+  file <- ls $ Turtle.fromText "."
+  bool
+    (return ExitSuccess)
+    (reportErrors ("Parsing " <> fpToText file) $ moveAndParsePatreonReceipt file)
+    (match (compile "patreon_*.txt") (Turtle.encodeString file))
+
 parseAndMoveRevolutCsvStatement :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
 parseAndMoveRevolutCsvStatement stmtCsv = do
   walletDir <- getWalletDir
@@ -106,9 +122,13 @@ main = do
       , ("Revolut statements", FF.FFSourceRevolutMail)
       ]
   anyCoopParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
+  anyPatreonMoveAndParseFailure <- Turtle.fold moveAndParsePatreonReceipts (Foldl.any isExitFailure)
   anyRevolutParseAndMoveFailure <- Turtle.fold parseAndMoveRevolutCsvStatements (Foldl.any isExitFailure)
   when
-    (any isExitFailure fetchingExitCodes || anyCoopParseAndMoveFailure || anyRevolutParseAndMoveFailure)
+    ( any isExitFailure fetchingExitCodes || anyCoopParseAndMoveFailure
+        || anyPatreonMoveAndParseFailure
+        || anyRevolutParseAndMoveFailure
+    )
     (exit (ExitFailure 1))
  where
   isExitFailure ExitSuccess = False

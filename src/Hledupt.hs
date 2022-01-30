@@ -10,9 +10,12 @@ import Relude
 import Turtle (input)
 import qualified Turtle
 
-data HleduptSource = HleduptRevolut
+data HleduptSource
+  = HleduptPatreon
+  | HleduptRevolut
 
 hleduptSourceToCommand :: HleduptSource -> Text
+hleduptSourceToCommand HleduptPatreon = "parse-patreon"
 hleduptSourceToCommand HleduptRevolut = "parse-revolut"
 
 -- | Runs hledupt
