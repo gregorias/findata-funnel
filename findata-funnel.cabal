@@ -39,6 +39,7 @@ library
     , base >=4.13 && <5
     , foldl
     , mtl
+    , parallel-io
     , relude
     , text
     , turtle

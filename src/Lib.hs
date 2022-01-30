@@ -2,6 +2,7 @@ module Lib (
   main,
 ) where
 
+import Control.Concurrent.ParallelIO.Global (parallel)
 import Control.Exception (try)
 import qualified Control.Foldl as Foldl
 import Control.Monad.Except (MonadError (throwError))
@@ -114,13 +115,14 @@ parseAndMoveRevolutCsvStatements = do
 main :: IO ()
 main = do
   fetchingExitCodes :: [ExitCode] <-
-    mapM
-      (\(sourceName, ffSource) -> reportErrors ("Fetching " <> sourceName) $ FF.runFindataFetcher ffSource)
-      [ ("Coop receipts", FF.FFSourceCoop)
-      , ("EasyRide receipts", FF.FFSourceEasyRide)
-      , ("Patreon receipts", FF.FFSourcePatreon)
-      , ("Revolut statements", FF.FFSourceRevolutMail)
-      ]
+    parallel $
+      fmap
+        (\(sourceName, ffSource) -> reportErrors ("Fetching " <> sourceName) $ FF.runFindataFetcher ffSource)
+        [ ("Coop receipts", FF.FFSourceCoop)
+        , ("EasyRide receipts", FF.FFSourceEasyRide)
+        , ("Patreon receipts", FF.FFSourcePatreon)
+        , ("Revolut statements", FF.FFSourceRevolutMail)
+        ]
   anyCoopParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
   anyPatreonMoveAndParseFailure <- Turtle.fold moveAndParsePatreonReceipts (Foldl.any isExitFailure)
   anyRevolutParseAndMoveFailure <- Turtle.fold parseAndMoveRevolutCsvStatements (Foldl.any isExitFailure)

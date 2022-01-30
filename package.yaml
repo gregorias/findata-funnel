@@ -82,6 +82,7 @@ library:
   - foldl
   - Glob
   - mtl
+  - parallel-io
   - text
   - turtle
 
