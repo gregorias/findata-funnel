@@ -8,7 +8,10 @@ import qualified Control.Foldl as Foldl
 import Control.Monad.Except (MonadError (throwError))
 import Data.Text.IO (hPutStr)
 import qualified FindataFetcher as FF
-import Hledupt (HleduptSource (..), hledupt)
+import Hledupt (
+  HleduptSource (..),
+  hledupt,
+ )
 import Relude
 import System.FilePath.Glob (compile, match)
 import Turtle (
@@ -80,28 +83,41 @@ parseAndMoveCoopPdfReceipts = do
     (reportErrors ("Parsing " <> fpToText file) $ parseAndMoveCoopPdfReceipt file)
     (match (compile "Coop *.pdf") (Turtle.encodeString file))
 
-moveAndParsePatreonReceipt :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
-moveAndParsePatreonReceipt stmtTxt = do
+parseAndMoveStatement ::
+  (MonadError e m, MonadIO m, e ~ Text) =>
+  HleduptSource ->
+  Turtle.FilePath ->
+  m Turtle.FilePath
+parseAndMoveStatement hleduptSource stmt = do
   walletDir <- getWalletDir
-  let stmtLedger = walletDir </> Turtle.fromText "updates" </> stmtTxt
-  hledupt HleduptPatreon stmtTxt stmtLedger
-  rm stmtTxt
+  let stmtLedger = walletDir </> Turtle.fromText "updates" </> (stmt <.> "ledger")
+  hledupt hleduptSource stmt stmtLedger
+  rm stmt
+  return stmtLedger
 
-moveAndParsePatreonReceipts :: Shell ExitCode
-moveAndParsePatreonReceipts = do
+parseAndMoveDegiroPortfolioStatement :: Shell ExitCode
+parseAndMoveDegiroPortfolioStatement = do
   cdDownloads
   file <- ls $ Turtle.fromText "."
   bool
     (return ExitSuccess)
-    (reportErrors ("Parsing " <> fpToText file) $ moveAndParsePatreonReceipt file)
+    (reportErrors ("Parsing " <> fpToText file) $ void (parseAndMoveStatement HleduptDegiroPortfolio file))
+    (match (compile "degiro-account.csv") (Turtle.encodeString file))
+
+parseAndMovePatreonReceipt :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
+parseAndMovePatreonReceipt stmt = void $ parseAndMoveStatement HleduptPatreon stmt
+
+parseAndMovePatreonReceipts :: Shell ExitCode
+parseAndMovePatreonReceipts = do
+  cdDownloads
+  file <- ls $ Turtle.fromText "."
+  bool
+    (return ExitSuccess)
+    (reportErrors ("Parsing " <> fpToText file) $ parseAndMovePatreonReceipt file)
     (match (compile "patreon_*.txt") (Turtle.encodeString file))
 
 parseAndMoveRevolutCsvStatement :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
-parseAndMoveRevolutCsvStatement stmtCsv = do
-  walletDir <- getWalletDir
-  let stmtTxt = walletDir </> Turtle.fromText "updates" </> (stmtCsv <.> "txt")
-  hledupt HleduptRevolut stmtCsv stmtTxt
-  rm stmtCsv
+parseAndMoveRevolutCsvStatement stmt = void $ parseAndMoveStatement HleduptRevolut stmt
 
 parseAndMoveRevolutCsvStatements :: Shell ExitCode
 parseAndMoveRevolutCsvStatements = do
@@ -124,11 +140,13 @@ main = do
         , ("Revolut statements", FF.FFSourceRevolutMail)
         ]
   anyCoopParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
-  anyPatreonMoveAndParseFailure <- Turtle.fold moveAndParsePatreonReceipts (Foldl.any isExitFailure)
+  anyDegiroPortfolioParseAndMoveFailure <- Turtle.fold parseAndMoveDegiroPortfolioStatement (Foldl.any isExitFailure)
+  anyPatreonParseAndMoveFailure <- Turtle.fold parseAndMovePatreonReceipts (Foldl.any isExitFailure)
   anyRevolutParseAndMoveFailure <- Turtle.fold parseAndMoveRevolutCsvStatements (Foldl.any isExitFailure)
   when
     ( any isExitFailure fetchingExitCodes || anyCoopParseAndMoveFailure
-        || anyPatreonMoveAndParseFailure
+        || anyDegiroPortfolioParseAndMoveFailure
+        || anyPatreonParseAndMoveFailure
         || anyRevolutParseAndMoveFailure
     )
     (exit (ExitFailure 1))

@@ -11,10 +11,12 @@ import Turtle (input)
 import qualified Turtle
 
 data HleduptSource
-  = HleduptPatreon
+  = HleduptDegiroPortfolio
+  | HleduptPatreon
   | HleduptRevolut
 
 hleduptSourceToCommand :: HleduptSource -> Text
+hleduptSourceToCommand HleduptDegiroPortfolio = "parse-degiro-portfolio"
 hleduptSourceToCommand HleduptPatreon = "parse-patreon"
 hleduptSourceToCommand HleduptRevolut = "parse-revolut"
 
