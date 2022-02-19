@@ -102,7 +102,7 @@ parseAndMoveDegiroPortfolioStatement = do
   bool
     (return ExitSuccess)
     (reportErrors ("Parsing " <> fpToText file) $ void (parseAndMoveStatement HleduptDegiroPortfolio file))
-    (match (compile "degiro-account.csv") (Turtle.encodeString file))
+    (match (compile "degiro-portfolio.csv") (Turtle.encodeString file))
 
 parseAndMovePatreonReceipt :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
 parseAndMovePatreonReceipt stmt = void $ parseAndMoveStatement HleduptPatreon stmt
