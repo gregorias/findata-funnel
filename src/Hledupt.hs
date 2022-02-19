@@ -27,7 +27,7 @@ hledupt :: (MonadError e m, MonadIO m, e ~ Text) => HleduptSource -> Turtle.File
 hledupt source inputFile outputFile = do
   eitherErrorOrUnit <- liftIO $
     try @Turtle.ExitCode . Turtle.sh $ do
-      let hleduptOutput = Turtle.inshell ("hledupt " <> hleduptSourceToCommand source) (input inputFile)
+      let hleduptOutput = Turtle.inshell ("/home/grzesiek/.local/bin/hledupt " <> hleduptSourceToCommand source) (input inputFile)
       Turtle.output outputFile hleduptOutput
   whenLeft
     ()
