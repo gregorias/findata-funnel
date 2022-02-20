@@ -9,9 +9,9 @@ import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.Managed (MonadManaged)
 import Data.Text.IO (hPutStr)
 import qualified FindataFetcher as FF
-import Hledupt (
-  HleduptSource (..),
-  hledupt,
+import FindataTranscoder (
+  FindataTranscoderSource (..),
+  findataTranscoder,
  )
 import Relude
 import System.FilePath.Glob (compile, match)
@@ -89,24 +89,24 @@ parseAndMoveCoopPdfReceipts = do
 
 parseAndMoveStatement ::
   (MonadError e m, MonadIO m, e ~ Text) =>
-  HleduptSource ->
+  FindataTranscoderSource ->
   Turtle.FilePath ->
   m Turtle.FilePath
-parseAndMoveStatement hleduptSource stmt = do
+parseAndMoveStatement findataTranscoderSource stmt = do
   walletDir <- getWalletDir
   let stmtLedger = walletDir </> Turtle.fromText "updates" </> (stmt <.> "ledger")
-  hledupt hleduptSource stmt stmtLedger
+  findataTranscoder findataTranscoderSource stmt stmtLedger
   rm stmt
   return stmtLedger
 
 parseAndAppendStatement ::
   (MonadError e m, e ~ Text, MonadManaged m) =>
-  HleduptSource ->
+  FindataTranscoderSource ->
   Turtle.FilePath ->
   m ()
-parseAndAppendStatement hleduptSource stmt = do
+parseAndAppendStatement findataTranscoderSource stmt = do
   tmpStmt <- Turtle.mktempfile "/tmp" "findata-funnel"
-  hledupt hleduptSource stmt tmpStmt
+  findataTranscoder findataTranscoderSource stmt tmpStmt
   wallet <- getWallet
   Turtle.append wallet (return $ Turtle.unsafeTextToLine "")
   Turtle.append wallet (Turtle.input tmpStmt)
@@ -117,11 +117,11 @@ parseAndAppendDegiroPortfolioStatement = do
   file <- ls $ Turtle.fromText "."
   bool
     (return ExitSuccess)
-    (reportErrors ("Parsing " <> fpToText file) $ void (parseAndAppendStatement HleduptDegiroPortfolio file >> rm file))
+    (reportErrors ("Parsing " <> fpToText file) $ void (parseAndAppendStatement FindataTranscoderDegiroPortfolio file >> rm file))
     (match (compile "degiro-portfolio.csv") (Turtle.encodeString file))
 
 parseAndMovePatreonReceipt :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
-parseAndMovePatreonReceipt stmt = void $ parseAndMoveStatement HleduptPatreon stmt
+parseAndMovePatreonReceipt stmt = void $ parseAndMoveStatement FindataTranscoderPatreon stmt
 
 parseAndMovePatreonReceipts :: Shell ExitCode
 parseAndMovePatreonReceipts = do
@@ -133,7 +133,7 @@ parseAndMovePatreonReceipts = do
     (match (compile "patreon_*.txt") (Turtle.encodeString file))
 
 parseAndMoveRevolutCsvStatement :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
-parseAndMoveRevolutCsvStatement stmt = void $ parseAndMoveStatement HleduptRevolut stmt
+parseAndMoveRevolutCsvStatement stmt = void $ parseAndMoveStatement FindataTranscoderRevolut stmt
 
 parseAndMoveRevolutCsvStatements :: Shell ExitCode
 parseAndMoveRevolutCsvStatements = do
