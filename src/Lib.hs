@@ -6,6 +6,7 @@ import Control.Concurrent.ParallelIO.Global (parallel)
 import Control.Exception (try)
 import qualified Control.Foldl as Foldl
 import Control.Monad.Except (MonadError (throwError))
+import Control.Monad.Managed (MonadManaged)
 import Data.Text.IO (hPutStr)
 import qualified FindataFetcher as FF
 import Hledupt (
@@ -39,6 +40,9 @@ getWalletDir :: (MonadIO m) => m Turtle.FilePath
 getWalletDir = do
   homeDir <- home
   return $ homeDir </> Turtle.fromText "Documents/Finance/Wallet"
+
+getWallet :: (MonadIO m) => m Turtle.FilePath
+getWallet = getWalletDir <&> (</> "wallet.txt")
 
 reportErrors :: (MonadIO io) => Text -> ExceptT Text io () -> io ExitCode
 reportErrors name action = do
@@ -95,13 +99,25 @@ parseAndMoveStatement hleduptSource stmt = do
   rm stmt
   return stmtLedger
 
-parseAndMoveDegiroPortfolioStatement :: Shell ExitCode
-parseAndMoveDegiroPortfolioStatement = do
+parseAndAppendStatement ::
+  (MonadError e m, e ~ Text, MonadManaged m) =>
+  HleduptSource ->
+  Turtle.FilePath ->
+  m ()
+parseAndAppendStatement hleduptSource stmt = do
+  tmpStmt <- Turtle.mktempfile "/tmp" "findata-funnel"
+  hledupt hleduptSource stmt tmpStmt
+  wallet <- getWallet
+  Turtle.append wallet (return $ Turtle.unsafeTextToLine "")
+  Turtle.append wallet (Turtle.input tmpStmt)
+
+parseAndAppendDegiroPortfolioStatement :: Shell ExitCode
+parseAndAppendDegiroPortfolioStatement = do
   cdDownloads
   file <- ls $ Turtle.fromText "."
   bool
     (return ExitSuccess)
-    (reportErrors ("Parsing " <> fpToText file) $ void (parseAndMoveStatement HleduptDegiroPortfolio file))
+    (reportErrors ("Parsing " <> fpToText file) $ void (parseAndAppendStatement HleduptDegiroPortfolio file >> rm file))
     (match (compile "degiro-portfolio.csv") (Turtle.encodeString file))
 
 parseAndMovePatreonReceipt :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
@@ -140,7 +156,7 @@ main = do
         , ("Revolut statements", FF.FFSourceRevolutMail)
         ]
   anyCoopParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
-  anyDegiroPortfolioParseAndMoveFailure <- Turtle.fold parseAndMoveDegiroPortfolioStatement (Foldl.any isExitFailure)
+  anyDegiroPortfolioParseAndMoveFailure <- Turtle.fold parseAndAppendDegiroPortfolioStatement (Foldl.any isExitFailure)
   anyPatreonParseAndMoveFailure <- Turtle.fold parseAndMovePatreonReceipts (Foldl.any isExitFailure)
   anyRevolutParseAndMoveFailure <- Turtle.fold parseAndMoveRevolutCsvStatements (Foldl.any isExitFailure)
   when

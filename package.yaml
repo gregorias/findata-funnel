@@ -81,6 +81,7 @@ library:
   dependencies:
   - foldl
   - Glob
+  - managed
   - mtl
   - parallel-io
   - text

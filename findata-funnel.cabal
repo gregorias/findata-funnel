@@ -38,6 +38,7 @@ library
       Glob
     , base >=4.13 && <5
     , foldl
+    , managed
     , mtl
     , parallel-io
     , relude
