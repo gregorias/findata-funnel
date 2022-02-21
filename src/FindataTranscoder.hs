@@ -15,12 +15,14 @@ data FindataTranscoderSource
   | FindataTranscoderDegiroPortfolio
   | FindataTranscoderPatreon
   | FindataTranscoderRevolut
+  | FindataTranscoderSplitwise
 
 findataTranscoderSourceToCommand :: FindataTranscoderSource -> Text
 findataTranscoderSourceToCommand FindataTranscoderDegiroAccount = "parse-degiro-account"
 findataTranscoderSourceToCommand FindataTranscoderDegiroPortfolio = "parse-degiro-portfolio"
 findataTranscoderSourceToCommand FindataTranscoderPatreon = "parse-patreon"
 findataTranscoderSourceToCommand FindataTranscoderRevolut = "parse-revolut"
+findataTranscoderSourceToCommand FindataTranscoderSplitwise = "parse-splitwise"
 
 -- | Runs findata-transcoder
 findataTranscoder ::

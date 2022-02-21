@@ -144,6 +144,15 @@ parseAndMoveRevolutCsvStatements = do
     (reportErrors ("Parsing " <> fpToText file) $ parseAndMoveRevolutCsvStatement file)
     (match (compile "revolut-account-statement*.csv") (Turtle.encodeString file))
 
+parseAndAppendSplitwise :: Shell ExitCode
+parseAndAppendSplitwise = do
+  cdDownloads
+  file <- ls $ Turtle.fromText "."
+  bool
+    (return ExitSuccess)
+    (reportErrors ("Parsing " <> fpToText file) $ void (parseAndAppendStatement FindataTranscoderSplitwise file >> rm file))
+    (match (compile "splitwise.csv") (Turtle.encodeString file))
+
 main :: IO ()
 main = do
   fetchingExitCodes :: [ExitCode] <-
@@ -156,14 +165,16 @@ main = do
         , ("Revolut statements", FF.FFSourceRevolutMail)
         ]
   anyCoopParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
-  anyDegiroPortfolioParseAndMoveFailure <- Turtle.fold parseAndAppendDegiroPortfolioStatement (Foldl.any isExitFailure)
+  anyDegiroPortfolioParseAndAppendFailure <- Turtle.fold parseAndAppendDegiroPortfolioStatement (Foldl.any isExitFailure)
   anyPatreonParseAndMoveFailure <- Turtle.fold parseAndMovePatreonReceipts (Foldl.any isExitFailure)
   anyRevolutParseAndMoveFailure <- Turtle.fold parseAndMoveRevolutCsvStatements (Foldl.any isExitFailure)
+  anySplitwiseParseAndAppendFailure <- Turtle.fold parseAndAppendSplitwise (Foldl.any isExitFailure)
   when
     ( any isExitFailure fetchingExitCodes || anyCoopParseAndMoveFailure
-        || anyDegiroPortfolioParseAndMoveFailure
+        || anyDegiroPortfolioParseAndAppendFailure
         || anyPatreonParseAndMoveFailure
         || anyRevolutParseAndMoveFailure
+        || anySplitwiseParseAndAppendFailure
     )
     (exit (ExitFailure 1))
  where
