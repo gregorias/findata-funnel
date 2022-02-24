@@ -25,7 +25,7 @@ findataTranscoderSourceToCommand FindataTranscoderPatreon = "parse-patreon"
 findataTranscoderSourceToCommand FindataTranscoderRevolut = "parse-revolut"
 findataTranscoderSourceToCommand FindataTranscoderSplitwise = "parse-splitwise"
 
--- | Runs findata-transcoder
+-- | Runs findata-transcoder.
 findataTranscoder ::
   (MonadError e m, MonadIO m, e ~ Text) =>
   FindataTranscoderSource ->

@@ -27,6 +27,7 @@ library
       FindataFetcher
       FindataTranscoder
       Lib
+      PdfToText
   other-modules:
       Paths_findata_funnel
   hs-source-dirs:

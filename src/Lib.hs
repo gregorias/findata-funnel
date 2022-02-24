@@ -3,9 +3,8 @@ module Lib (
 ) where
 
 import Control.Concurrent.ParallelIO.Global (parallel)
-import Control.Exception (try)
 import qualified Control.Foldl as Foldl
-import Control.Monad.Except (MonadError (throwError))
+import Control.Monad.Except (MonadError)
 import Control.Monad.Managed (MonadManaged)
 import Data.Text.IO (hPutStr)
 import qualified FindataFetcher as FF
@@ -13,6 +12,7 @@ import FindataTranscoder (
   FindataTranscoderSource (..),
   findataTranscoder,
  )
+import PdfToText (pdftotext)
 import Relude
 import System.FilePath.Glob (compile, match)
 import Turtle (
@@ -21,10 +21,8 @@ import Turtle (
   cd,
   exit,
   home,
-  inproc,
   ls,
   rm,
-  sh,
   (<.>),
   (</>),
  )
@@ -52,30 +50,23 @@ reportErrors name action = do
     (const $ return ExitSuccess)
     eitherErrorOrValue
 
--- | Runs pdftotext utility.
---
--- https://en.wikipedia.org/wiki/Pdftotext
-pdftotext :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> Turtle.FilePath -> m ()
-pdftotext pdfFile txtFile = do
-  eitherErrorOrUnit <-
-    liftIO $
-      try @SomeException . sh $
-        void $ inproc "pdftotext" ["-raw", fpToText pdfFile, fpToText txtFile] mempty
-  whenLeft () eitherErrorOrUnit (\e -> throwError $ "The pdftotext has failed: " <> show e)
-
 cdDownloads :: (MonadIO io) => io ()
 cdDownloads = do
   homeDir <- home
   cd $ homeDir </> Turtle.fromText "Downloads"
 
-parseAndMoveCoopPdfReceipt :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
+parseAndMoveCoopPdfReceipt ::
+  (MonadError e m, MonadIO m, e ~ Text) =>
+  -- | The path to the receipt.
+  Turtle.FilePath ->
+  m ()
 parseAndMoveCoopPdfReceipt receiptPdf = do
   walletDir <- getWalletDir
   let receiptTxt =
         walletDir
           </> Turtle.fromText "updates/coop-receipts"
           </> (receiptPdf <.> "txt")
-  pdftotext receiptPdf receiptTxt
+  pdftotext (fpToText receiptPdf) (fpToText receiptTxt)
   rm receiptPdf
 
 parseAndMoveCoopPdfReceipts :: Shell ExitCode
