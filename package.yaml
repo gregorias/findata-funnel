@@ -79,6 +79,7 @@ library:
   ghc-options:
   - -Wunused-packages
   dependencies:
+  - either
   - foldl
   - Glob
   - managed

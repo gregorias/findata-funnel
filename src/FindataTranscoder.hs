@@ -6,7 +6,8 @@ module FindataTranscoder (
 
 import Control.Exception (try)
 import Control.Monad.Except (MonadError (throwError))
-import Relude
+import Data.Either.Combinators (whenLeft)
+import Relude hiding (whenLeft)
 import Turtle (input)
 import qualified Turtle
 
@@ -32,16 +33,12 @@ findataTranscoder ::
   Turtle.FilePath ->
   m ()
 findataTranscoder source inputFile outputFile = do
-  eitherErrorOrUnit <- liftIO $
+  result :: Either Turtle.ExitCode () <- liftIO $
     try @Turtle.ExitCode . Turtle.sh $ do
-      let findataTranscoderOutput =
+      let ftPath = "/home/grzesiek/.local/bin/findata-transcoder"
+          findataTranscoderOutput =
             Turtle.inshell
-              ( "/home/grzesiek/.local/bin/findata-transcoder "
-                  <> findataTranscoderSourceToCommand source
-              )
+              (ftPath <> " " <> findataTranscoderSourceToCommand source)
               (input inputFile)
       Turtle.output outputFile findataTranscoderOutput
-  whenLeft
-    ()
-    eitherErrorOrUnit
-    (const $ throwError "The findata-transcoder tool has failed.")
+  whenLeft result (const $ throwError "The findata-transcoder tool has failed.")
