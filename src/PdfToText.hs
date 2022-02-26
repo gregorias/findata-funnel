@@ -1,6 +1,6 @@
 -- | This module handles using pdf to text utilities.
 module PdfToText (
-  pdf2text,
+  pdf2txt,
   pdftotext,
 ) where
 
@@ -27,10 +27,15 @@ pdftotext pdfFile txtFile = do
         Turtle.inproc "pdftotext" ["-raw", pdfFile, txtFile] mempty
   whenLeft result (const . throwError $ "pdftotext has failed.")
 
--- | Runs 'pdf2text' utility.
-pdf2text ::
-  -- | Input PDF content
-  Turtle.Shell Turtle.Line ->
-  -- | Output text lines
-  Turtle.Shell Turtle.Line
-pdf2text = Turtle.inproc "pdf2text" []
+-- | Runs 'pdf2txt' utility.
+pdf2txt ::
+  (MonadError e io, MonadIO io, e ~ Text) =>
+  -- | Input PDF path
+  Text ->
+  -- | Output text
+  io Text
+pdf2txt pdf = do
+  (exitCode, txt) <- Turtle.procStrict "pdf2txt" [pdf] mempty
+  case exitCode of
+    Turtle.ExitSuccess -> return txt
+    Turtle.ExitFailure _ -> throwError "pdf2txt has failed."
