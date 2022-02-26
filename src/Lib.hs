@@ -55,19 +55,45 @@ cdDownloads = do
   homeDir <- home
   cd $ homeDir </> Turtle.fromText "Downloads"
 
-parseAndMoveCoopPdfReceipt ::
+textifyAndMovePdf ::
   (MonadError e m, MonadIO m, e ~ Text) =>
-  -- | The path to the receipt.
+  -- | The target path in the wallet dir.
+  Turtle.FilePath ->
+  -- | The path to the PDF.
   Turtle.FilePath ->
   m ()
-parseAndMoveCoopPdfReceipt receiptPdf = do
+textifyAndMovePdf subdir pdf = do
   walletDir <- getWalletDir
-  let receiptTxt =
-        walletDir
-          </> Turtle.fromText "updates/coop-receipts"
-          </> (receiptPdf <.> "txt")
-  pdftotext (fpToText receiptPdf) (fpToText receiptTxt)
-  rm receiptPdf
+  let txt = walletDir </> subdir </> (pdf <.> "txt")
+  pdftotext (fpToText pdf) (fpToText txt)
+  rm pdf
+
+textifyAndMoveBcgeCcPdfStatement :: Shell ExitCode
+textifyAndMoveBcgeCcPdfStatement = do
+  cdDownloads
+  file <- ls $ Turtle.fromText "."
+  bool
+    (return ExitSuccess)
+    (reportErrors ("Textifying " <> fpToText file) $ textifyAndMovePdf "updates" file)
+    (match (compile "bcgecc.pdf") (Turtle.encodeString file))
+
+parseAndMoveBcgeCcPdfStatement :: Shell ExitCode
+parseAndMoveBcgeCcPdfStatement = do
+  walletDir <- getWalletDir
+  let targetDir = walletDir </> "updates"
+  cd targetDir
+  file <- ls $ Turtle.fromText "."
+  bool
+    (return ExitSuccess)
+    (reportErrors ("Parsing " <> fpToText file) $ void (parseAndMoveStatement FindataTranscoderBcgeCc file))
+    (match (compile "bcgecc*.txt") (Turtle.encodeString file))
+
+textifyAndMoveCoopPdfReceipt ::
+  (MonadError e m, MonadIO m, e ~ Text) =>
+  -- | The path to the PDF receipt.
+  Turtle.FilePath ->
+  m ()
+textifyAndMoveCoopPdfReceipt = textifyAndMovePdf "updates/coop-receipts"
 
 parseAndMoveCoopPdfReceipts :: Shell ExitCode
 parseAndMoveCoopPdfReceipts = do
@@ -75,7 +101,7 @@ parseAndMoveCoopPdfReceipts = do
   file <- ls $ Turtle.fromText "."
   bool
     (return ExitSuccess)
-    (reportErrors ("Parsing " <> fpToText file) $ parseAndMoveCoopPdfReceipt file)
+    (reportErrors ("Textifying " <> fpToText file) $ textifyAndMoveCoopPdfReceipt file)
     (match (compile "Coop *.pdf") (Turtle.encodeString file))
 
 parseAndMoveStatement ::
@@ -155,13 +181,18 @@ main = do
         , ("Patreon receipts", FF.FFSourcePatreon)
         , ("Revolut statements", FF.FFSourceRevolutMail)
         ]
+  anyBcgeCcTextifyAndMovePdfStatementFailure <- Turtle.fold textifyAndMoveBcgeCcPdfStatement (Foldl.any isExitFailure)
+  anyBcgeCcParseAndMovePdfStatementFailure <- Turtle.fold parseAndMoveBcgeCcPdfStatement (Foldl.any isExitFailure)
   anyCoopParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
   anyDegiroPortfolioParseAndAppendFailure <- Turtle.fold parseAndAppendDegiroPortfolioStatement (Foldl.any isExitFailure)
   anyPatreonParseAndMoveFailure <- Turtle.fold parseAndMovePatreonReceipts (Foldl.any isExitFailure)
   anyRevolutParseAndMoveFailure <- Turtle.fold parseAndMoveRevolutCsvStatements (Foldl.any isExitFailure)
   anySplitwiseParseAndAppendFailure <- Turtle.fold parseAndAppendSplitwise (Foldl.any isExitFailure)
   when
-    ( any isExitFailure fetchingExitCodes || anyCoopParseAndMoveFailure
+    ( any isExitFailure fetchingExitCodes
+        || anyBcgeCcTextifyAndMovePdfStatementFailure
+        || anyBcgeCcParseAndMovePdfStatementFailure
+        || anyCoopParseAndMoveFailure
         || anyDegiroPortfolioParseAndAppendFailure
         || anyPatreonParseAndMoveFailure
         || anyRevolutParseAndMoveFailure
