@@ -4,19 +4,21 @@ module Lib (
 
 import Control.Concurrent.ParallelIO.Global (parallel)
 import qualified Control.Foldl as Foldl
-import Control.Monad.Except (MonadError)
+import Control.Monad.Except (MonadError (catchError, throwError))
 import Control.Monad.Managed (MonadManaged)
 import Data.Text.IO (hPutStr)
 import qualified FindataFetcher as FF
 import FindataTranscoder (
   FindataTranscoderSource (..),
   findataTranscoder,
+  findataTranscoderTxt,
  )
-import PdfToText (pdftotext)
+import PdfToText (pdf2txt, pdftotext)
 import Relude
 import System.FilePath.Glob (compile, match)
 import Turtle (
   ExitCode (ExitFailure, ExitSuccess),
+  Line,
   Shell,
   cd,
   exit,
@@ -27,6 +29,7 @@ import Turtle (
   (</>),
  )
 import qualified Turtle
+import Turtle.Extra (decodePathM, emptyLine)
 
 fromEither :: Either a a -> a
 fromEither = either id id
@@ -137,6 +140,35 @@ parseAndAppendDegiroPortfolioStatement = do
     (reportErrors ("Parsing " <> fpToText file) $ void (parseAndAppendStatement FindataTranscoderDegiroPortfolio file >> rm file))
     (match (compile "degiro-portfolio.csv") (Turtle.encodeString file))
 
+-- | Moves Google Payslip PDF to the main wallet file.
+moveGPayslipToWallet ::
+  (MonadError e m, MonadIO m, e ~ Text) =>
+  -- | The Google payslip PDF.
+  Turtle.FilePath ->
+  m ()
+moveGPayslipToWallet pdf = flip catchError prependContext $ do
+  pdfPath :: Text <- decodePathM pdf
+  gpayslipTxt :: Text <- pdf2txt pdfPath
+  let gpayslipContent :: Shell Line = Turtle.select $ Turtle.textToLines gpayslipTxt
+  ledgerTransaction :: Text <- findataTranscoderTxt FindataTranscoderGPayslip gpayslipContent
+  wallet <- getWallet
+  Turtle.append wallet (Turtle.select $ emptyLine <> Turtle.textToLines ledgerTransaction)
+  rm pdf
+ where
+  prependContext errMsg = do
+    pdfPath <- decodePathM pdf
+    throwError $
+      "Could not move Google Payslip (" <> pdfPath <> ") to the wallet file.\n" <> errMsg
+
+moveGPayslipsToWallet :: Shell ExitCode
+moveGPayslipsToWallet = do
+  cdDownloads
+  file <- ls $ Turtle.fromText "."
+  bool
+    (return ExitSuccess)
+    (reportErrors ("Parsing " <> fpToText file) $ moveGPayslipToWallet file)
+    (match (compile "gpayslip*.pdf") (Turtle.encodeString file))
+
 parseAndMovePatreonReceipt :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
 parseAndMovePatreonReceipt stmt = void $ parseAndMoveStatement FindataTranscoderPatreon stmt
 
@@ -185,6 +217,7 @@ main = do
   anyBcgeCcParseAndMovePdfStatementFailure <- Turtle.fold parseAndMoveBcgeCcPdfStatement (Foldl.any isExitFailure)
   anyCoopParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
   anyDegiroPortfolioParseAndAppendFailure <- Turtle.fold parseAndAppendDegiroPortfolioStatement (Foldl.any isExitFailure)
+  anyGPayslipFailure <- Turtle.fold moveGPayslipsToWallet (Foldl.any isExitFailure)
   anyPatreonParseAndMoveFailure <- Turtle.fold parseAndMovePatreonReceipts (Foldl.any isExitFailure)
   anyRevolutParseAndMoveFailure <- Turtle.fold parseAndMoveRevolutCsvStatements (Foldl.any isExitFailure)
   anySplitwiseParseAndAppendFailure <- Turtle.fold parseAndAppendSplitwise (Foldl.any isExitFailure)
@@ -194,6 +227,7 @@ main = do
         || anyBcgeCcParseAndMovePdfStatementFailure
         || anyCoopParseAndMoveFailure
         || anyDegiroPortfolioParseAndAppendFailure
+        || anyGPayslipFailure
         || anyPatreonParseAndMoveFailure
         || anyRevolutParseAndMoveFailure
         || anySplitwiseParseAndAppendFailure

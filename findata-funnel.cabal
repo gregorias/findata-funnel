@@ -28,6 +28,7 @@ library
       FindataTranscoder
       Lib
       PdfToText
+      Turtle.Extra
   other-modules:
       Paths_findata_funnel
   hs-source-dirs:

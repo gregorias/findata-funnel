@@ -38,4 +38,4 @@ pdf2txt pdf = do
   (exitCode, txt) <- Turtle.procStrict "pdf2txt" [pdf] mempty
   case exitCode of
     Turtle.ExitSuccess -> return txt
-    Turtle.ExitFailure _ -> throwError "pdf2txt has failed."
+    Turtle.ExitFailure _ -> throwError "pdf2txt has failed.\n"
