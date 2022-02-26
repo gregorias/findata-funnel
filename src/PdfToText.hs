@@ -35,7 +35,8 @@ pdf2txt ::
   -- | Output text
   io Text
 pdf2txt pdf = do
-  (exitCode, txt) <- Turtle.procStrict "pdf2txt" [pdf] mempty
+  let pdf2txtexe = "/home/grzesiek/.local/bin/pdf2txt"
+  (exitCode, txt) <- Turtle.procStrict pdf2txtexe [pdf] mempty
   case exitCode of
     Turtle.ExitSuccess -> return txt
     Turtle.ExitFailure _ -> throwError "pdf2txt has failed.\n"
