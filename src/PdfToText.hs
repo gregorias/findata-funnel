@@ -1,5 +1,6 @@
--- | This module handles using pdftotext.
+-- | This module handles using pdf to text utilities.
 module PdfToText (
+  pdf2text,
   pdftotext,
 ) where
 
@@ -24,4 +25,12 @@ pdftotext pdfFile txtFile = do
     liftIO $
       try @Turtle.ExitCode . Turtle.sh . void $
         Turtle.inproc "pdftotext" ["-raw", pdfFile, txtFile] mempty
-  whenLeft result (const . throwError $ "The pdftotext has failed.")
+  whenLeft result (const . throwError $ "pdftotext has failed.")
+
+-- | Runs 'pdf2text' utility.
+pdf2text ::
+  -- | Input PDF content
+  Turtle.Shell Turtle.Line ->
+  -- | Output text lines
+  Turtle.Shell Turtle.Line
+pdf2text = Turtle.inproc "pdf2text" []
