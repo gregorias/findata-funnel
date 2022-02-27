@@ -212,6 +212,7 @@ main = do
         , ("EasyRide receipts", FF.FFSourceEasyRide)
         , ("Patreon receipts", FF.FFSourcePatreon)
         , ("Revolut statements", FF.FFSourceRevolutMail)
+        , ("Uber Eats bills", FF.FFSourceUberEats)
         ]
   anyBcgeCcTextifyAndMovePdfStatementFailure <- Turtle.fold textifyAndMoveBcgeCcPdfStatement (Foldl.any isExitFailure)
   anyBcgeCcParseAndMovePdfStatementFailure <- Turtle.fold parseAndMoveBcgeCcPdfStatement (Foldl.any isExitFailure)
