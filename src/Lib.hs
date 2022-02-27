@@ -202,6 +202,21 @@ parseAndAppendSplitwise = do
     (reportErrors ("Parsing " <> fpToText file) $ void (parseAndAppendStatement FindataTranscoderSplitwise file >> rm file))
     (match (compile "splitwise.csv") (Turtle.encodeString file))
 
+moveUberEatsBill :: (MonadIO m) => Turtle.FilePath -> m ()
+moveUberEatsBill bill = do
+  walletDir <- getWalletDir
+  let target = walletDir </> Turtle.fromText "updates" </> Turtle.basename bill
+  Turtle.mv bill target
+
+moveUberEatsBills :: Shell ExitCode
+moveUberEatsBills = do
+  cdDownloads
+  file <- ls $ Turtle.fromText "."
+  bool
+    (return ExitSuccess)
+    (reportErrors ("Moving " <> fpToText file) $ moveUberEatsBill file)
+    (match (compile "*.ubereats") (Turtle.encodeString file))
+
 main :: IO ()
 main = do
   fetchingExitCodes :: [ExitCode] <-
@@ -222,6 +237,7 @@ main = do
   anyPatreonParseAndMoveFailure <- Turtle.fold parseAndMovePatreonReceipts (Foldl.any isExitFailure)
   anyRevolutParseAndMoveFailure <- Turtle.fold parseAndMoveRevolutCsvStatements (Foldl.any isExitFailure)
   anySplitwiseParseAndAppendFailure <- Turtle.fold parseAndAppendSplitwise (Foldl.any isExitFailure)
+  anyUberEatsFailure <- Turtle.fold moveUberEatsBills (Foldl.any isExitFailure)
   when
     ( any isExitFailure fetchingExitCodes
         || anyBcgeCcTextifyAndMovePdfStatementFailure
@@ -232,6 +248,7 @@ main = do
         || anyPatreonParseAndMoveFailure
         || anyRevolutParseAndMoveFailure
         || anySplitwiseParseAndAppendFailure
+        || anyUberEatsFailure
     )
     (exit (ExitFailure 1))
  where
