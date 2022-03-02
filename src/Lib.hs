@@ -130,7 +130,8 @@ appendToWallet ::
   io ()
 appendToWallet transaction = do
   wallet <- getWallet
-  Turtle.append wallet (shellNewline <> transaction)
+  Turtle.append wallet shellNewline
+  Turtle.append wallet transaction
 
 parseAndAppendStatement ::
   (MonadError e m, e ~ Text, MonadManaged m) =>
@@ -179,16 +180,16 @@ moveGPayslipsToWallet = do
     (reportErrors ("Parsing " <> fpToText file) $ moveGPayslipToWallet file)
     (match (compile "gpayslip*.pdf") (Turtle.encodeString file))
 
-parseAndMovePatreonReceipt :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
-parseAndMovePatreonReceipt stmt = void $ parseAndMoveStatement FindataTranscoderPatreon stmt
+movePatreonReceipt :: (MonadError e m, MonadManaged m, e ~ Text) => Turtle.FilePath -> m ()
+movePatreonReceipt stmt = void $ parseAndAppendStatement FindataTranscoderPatreon stmt
 
-parseAndMovePatreonReceipts :: Shell ExitCode
-parseAndMovePatreonReceipts = do
+movePatreonReceipts :: Shell ExitCode
+movePatreonReceipts = do
   cdDownloads
   file <- ls $ Turtle.fromText "."
   bool
     (return ExitSuccess)
-    (reportErrors ("Parsing " <> fpToText file) $ parseAndMovePatreonReceipt file)
+    (reportErrors ("Parsing " <> fpToText file) $ void (movePatreonReceipt file >> rm file))
     (match (compile "patreon_*.txt") (Turtle.encodeString file))
 
 parseAndMoveRevolutCsvStatement :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
@@ -244,7 +245,7 @@ main = do
   anyCoopParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
   anyDegiroPortfolioParseAndAppendFailure <- Turtle.fold parseAndAppendDegiroPortfolioStatement (Foldl.any isExitFailure)
   anyGPayslipFailure <- Turtle.fold moveGPayslipsToWallet (Foldl.any isExitFailure)
-  anyPatreonParseAndMoveFailure <- Turtle.fold parseAndMovePatreonReceipts (Foldl.any isExitFailure)
+  anyPatreonParseAndMoveFailure <- Turtle.fold movePatreonReceipts (Foldl.any isExitFailure)
   anyRevolutParseAndMoveFailure <- Turtle.fold parseAndMoveRevolutCsvStatements (Foldl.any isExitFailure)
   anySplitwiseParseAndAppendFailure <- Turtle.fold parseAndAppendSplitwise (Foldl.any isExitFailure)
   anyUberEatsFailure <- Turtle.fold moveUberEatsBills (Foldl.any isExitFailure)
