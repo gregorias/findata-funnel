@@ -202,11 +202,11 @@ parseAndAppendSplitwise = do
     (reportErrors ("Parsing " <> fpToText file) $ void (parseAndAppendStatement FindataTranscoderSplitwise file >> rm file))
     (match (compile "splitwise.csv") (Turtle.encodeString file))
 
-moveUberEatsBill :: (MonadIO m) => Turtle.FilePath -> m ()
-moveUberEatsBill bill = do
-  walletDir <- getWalletDir
-  let target = walletDir </> Turtle.fromText "updates" </> Turtle.basename bill
-  Turtle.mv bill target
+moveUberEatsBill ::
+  (MonadError e m, e ~ Text, MonadManaged m) =>
+  Turtle.FilePath ->
+  m ()
+moveUberEatsBill = parseAndAppendStatement FindataTranscoderUberEats
 
 moveUberEatsBills :: Shell ExitCode
 moveUberEatsBills = do
@@ -214,7 +214,7 @@ moveUberEatsBills = do
   file <- ls $ Turtle.fromText "."
   bool
     (return ExitSuccess)
-    (reportErrors ("Moving " <> fpToText file) $ moveUberEatsBill file)
+    (reportErrors ("Moving " <> fpToText file) $ void (moveUberEatsBill file >> rm file))
     (match (compile "*.ubereats") (Turtle.encodeString file))
 
 main :: IO ()

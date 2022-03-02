@@ -20,6 +20,7 @@ data FindataTranscoderSource
   | FindataTranscoderPatreon
   | FindataTranscoderRevolut
   | FindataTranscoderSplitwise
+  | FindataTranscoderUberEats
 
 findataTranscoderSourceToCommand :: FindataTranscoderSource -> Text
 findataTranscoderSourceToCommand FindataTranscoderBcgeCc = "parse-bcge-cc"
@@ -29,6 +30,7 @@ findataTranscoderSourceToCommand FindataTranscoderGPayslip = "parse-gpayslip"
 findataTranscoderSourceToCommand FindataTranscoderPatreon = "parse-patreon"
 findataTranscoderSourceToCommand FindataTranscoderRevolut = "parse-revolut"
 findataTranscoderSourceToCommand FindataTranscoderSplitwise = "parse-splitwise"
+findataTranscoderSourceToCommand FindataTranscoderUberEats = "parse-uber-eats"
 
 -- | Runs findata-transcoder.
 findataTranscoder ::
