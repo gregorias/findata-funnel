@@ -119,6 +119,19 @@ parseAndMoveStatement findataTranscoderSource stmt = do
   rm stmt
   return stmtLedger
 
+shellNewline :: Shell Line
+shellNewline = return mempty
+
+-- | Appends the transaction to the wallet.
+appendToWallet ::
+  (MonadIO io) =>
+  -- | Transaction
+  Shell Line ->
+  io ()
+appendToWallet transaction = do
+  wallet <- getWallet
+  Turtle.append wallet (shellNewline <> transaction)
+
 parseAndAppendStatement ::
   (MonadError e m, e ~ Text, MonadManaged m) =>
   FindataTranscoderSource ->
@@ -126,8 +139,7 @@ parseAndAppendStatement ::
   m ()
 parseAndAppendStatement findataTranscoderSource stmt = do
   stmtTxt <- findataTranscoder findataTranscoderSource (Turtle.input stmt)
-  wallet <- getWallet
-  Turtle.append wallet (Turtle.select . Turtle.textToLines $ "\n" <> stmtTxt)
+  appendToWallet (Turtle.select $ Turtle.textToLines stmtTxt)
 
 parseAndAppendDegiroPortfolioStatement :: Shell ExitCode
 parseAndAppendDegiroPortfolioStatement = do
