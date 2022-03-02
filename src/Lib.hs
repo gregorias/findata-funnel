@@ -11,7 +11,6 @@ import qualified FindataFetcher as FF
 import FindataTranscoder (
   FindataTranscoderSource (..),
   findataTranscoder,
-  findataTranscoderTxt,
  )
 import PdfToText (pdf2txt, pdftotext)
 import Relude
@@ -114,8 +113,9 @@ parseAndMoveStatement ::
   m Turtle.FilePath
 parseAndMoveStatement findataTranscoderSource stmt = do
   walletDir <- getWalletDir
+  ledgerOutput <- findataTranscoder findataTranscoderSource (Turtle.input stmt)
   let stmtLedger = walletDir </> Turtle.fromText "updates" </> (stmt <.> "ledger")
-  findataTranscoder findataTranscoderSource stmt stmtLedger
+  Turtle.output stmtLedger (Turtle.select $ Turtle.textToLines ledgerOutput)
   rm stmt
   return stmtLedger
 
@@ -125,11 +125,9 @@ parseAndAppendStatement ::
   Turtle.FilePath ->
   m ()
 parseAndAppendStatement findataTranscoderSource stmt = do
-  tmpStmt <- Turtle.mktempfile "/tmp" "findata-funnel"
-  findataTranscoder findataTranscoderSource stmt tmpStmt
+  stmtTxt <- findataTranscoder findataTranscoderSource (Turtle.input stmt)
   wallet <- getWallet
-  Turtle.append wallet (return $ Turtle.unsafeTextToLine "")
-  Turtle.append wallet (Turtle.input tmpStmt)
+  Turtle.append wallet (Turtle.select . Turtle.textToLines $ "\n" <> stmtTxt)
 
 parseAndAppendDegiroPortfolioStatement :: Shell ExitCode
 parseAndAppendDegiroPortfolioStatement = do
@@ -150,7 +148,7 @@ moveGPayslipToWallet pdf = flip catchError prependContext $ do
   pdfPath :: Text <- decodePathM pdf
   gpayslipTxt :: Text <- pdf2txt pdfPath
   let gpayslipContent :: Shell Line = Turtle.select $ Turtle.textToLines gpayslipTxt
-  ledgerTransaction :: Text <- findataTranscoderTxt FindataTranscoderGPayslip gpayslipContent
+  ledgerTransaction :: Text <- findataTranscoder FindataTranscoderGPayslip gpayslipContent
   wallet <- getWallet
   Turtle.append wallet (Turtle.select $ emptyLine <> Turtle.textToLines ledgerTransaction)
   rm pdf
