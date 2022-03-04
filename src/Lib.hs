@@ -236,6 +236,7 @@ main = do
         (\(sourceName, ffSource) -> reportErrors ("Fetching " <> sourceName) $ FF.runFindataFetcher ffSource)
         [ ("Coop receipts", FF.FFSourceCoop)
         , ("EasyRide receipts", FF.FFSourceEasyRide)
+        , ("Galaxus receipts", FF.FFSourceGalaxus)
         , ("Patreon receipts", FF.FFSourcePatreon)
         , ("Revolut statements", FF.FFSourceRevolutMail)
         , ("Uber Eats bills", FF.FFSourceUberEats)
