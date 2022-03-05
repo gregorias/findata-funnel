@@ -213,6 +213,21 @@ parseAndAppendSplitwise = do
     (reportErrors ("Parsing " <> fpToText file) $ void (parseAndAppendStatement FindataTranscoderSplitwise file >> rm file))
     (match (compile "splitwise.csv") (Turtle.encodeString file))
 
+moveGalaxusReceipts :: Shell ExitCode
+moveGalaxusReceipts = do
+  cdDownloads
+  file <- ls $ Turtle.fromText "."
+  bool
+    (return ExitSuccess)
+    (reportErrors ("Moving " <> fpToText file) $ void (moveGalaxusBill file >> rm file))
+    (match (compile "*.galaxus") (Turtle.encodeString file))
+ where
+  moveGalaxusBill ::
+    (MonadError e m, e ~ Text, MonadManaged m) =>
+    Turtle.FilePath ->
+    m ()
+  moveGalaxusBill = parseAndAppendStatement FindataTranscoderGalaxus
+
 moveUberEatsBill ::
   (MonadError e m, e ~ Text, MonadManaged m) =>
   Turtle.FilePath ->
@@ -245,6 +260,7 @@ main = do
   anyBcgeCcParseAndMovePdfStatementFailure <- Turtle.fold parseAndMoveBcgeCcPdfStatement (Foldl.any isExitFailure)
   anyCoopParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
   anyDegiroPortfolioParseAndAppendFailure <- Turtle.fold parseAndAppendDegiroPortfolioStatement (Foldl.any isExitFailure)
+  anyGalaxusFailure <- Turtle.fold moveGalaxusReceipts (Foldl.any isExitFailure)
   anyGPayslipFailure <- Turtle.fold moveGPayslipsToWallet (Foldl.any isExitFailure)
   anyPatreonParseAndMoveFailure <- Turtle.fold movePatreonReceipts (Foldl.any isExitFailure)
   anyRevolutParseAndMoveFailure <- Turtle.fold parseAndMoveRevolutCsvStatements (Foldl.any isExitFailure)
@@ -256,6 +272,7 @@ main = do
         || anyBcgeCcParseAndMovePdfStatementFailure
         || anyCoopParseAndMoveFailure
         || anyDegiroPortfolioParseAndAppendFailure
+        || anyGalaxusFailure
         || anyGPayslipFailure
         || anyPatreonParseAndMoveFailure
         || anyRevolutParseAndMoveFailure

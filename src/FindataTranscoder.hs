@@ -12,6 +12,7 @@ data FindataTranscoderSource
   = FindataTranscoderBcgeCc
   | FindataTranscoderDegiroAccount
   | FindataTranscoderDegiroPortfolio
+  | FindataTranscoderGalaxus
   | FindataTranscoderGPayslip
   | FindataTranscoderPatreon
   | FindataTranscoderRevolut
@@ -22,6 +23,7 @@ findataTranscoderSourceToCommand :: FindataTranscoderSource -> Text
 findataTranscoderSourceToCommand FindataTranscoderBcgeCc = "parse-bcge-cc"
 findataTranscoderSourceToCommand FindataTranscoderDegiroAccount = "parse-degiro-account"
 findataTranscoderSourceToCommand FindataTranscoderDegiroPortfolio = "parse-degiro-portfolio"
+findataTranscoderSourceToCommand FindataTranscoderGalaxus = "parse-galaxus"
 findataTranscoderSourceToCommand FindataTranscoderGPayslip = "parse-gpayslip"
 findataTranscoderSourceToCommand FindataTranscoderPatreon = "parse-patreon"
 findataTranscoderSourceToCommand FindataTranscoderRevolut = "parse-revolut"
