@@ -37,7 +37,9 @@ runFindataFetcher source = do
   (exitCode, _) <-
     Turtle.procStrict
       ffPath
-      [findataFetcherSourceToCommand source, "--config_file=" <> configFilePath]
+      [ "--config_file=" <> configFilePath
+      , findataFetcherSourceToCommand source
+      ]
       mempty
   case exitCode of
     Turtle.ExitSuccess -> return ()
