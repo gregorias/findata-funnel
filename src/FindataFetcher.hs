@@ -33,7 +33,12 @@ runFindataFetcher :: (MonadError e m, MonadIO m, e ~ Text) => FindataFetcherSour
 runFindataFetcher source = do
   homeDir <- home
   ffPath <- liftEither <$> Turtle.toText $ homeDir </> ".local/bin/findata-fetcher"
-  (exitCode, _) <- Turtle.procStrict ffPath [findataFetcherSourceToCommand source] mempty
+  configFilePath <- liftEither <$> Turtle.toText $ homeDir </> "Code/findata-fetcher/config.json"
+  (exitCode, _) <-
+    Turtle.procStrict
+      ffPath
+      [findataFetcherSourceToCommand source, "--config_file=" <> configFilePath]
+      mempty
   case exitCode of
     Turtle.ExitSuccess -> return ()
     Turtle.ExitFailure _ -> throwError "The findata-fetcher tool has failed."
