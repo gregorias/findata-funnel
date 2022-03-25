@@ -4,10 +4,12 @@ module FindataFetcher (
   runFindataFetcher,
 ) where
 
-import Control.Exception (try)
-import Control.Monad.Except (MonadError (throwError))
+import Control.Monad.Except (MonadError (throwError), liftEither)
 import Relude
-import Turtle (ShellFailed (ShellFailed), home, pushd, sh, shells, (</>))
+import Turtle (
+  home,
+  (</>),
+ )
 import qualified Turtle
 
 data FindataFetcherSource
@@ -30,11 +32,8 @@ findataFetcherSourceToCommand FFSourceUberEats = "pull-uber-eats"
 runFindataFetcher :: (MonadError e m, MonadIO m, e ~ Text) => FindataFetcherSource -> m ()
 runFindataFetcher source = do
   homeDir <- home
-  eitherErrorOrUnit <- liftIO $
-    try @ShellFailed . sh $ do
-      pushd $ homeDir </> Turtle.fromText "Code/findata-fetcher"
-      shells ("pipenv run python -m fetcher.tool " <> findataFetcherSourceToCommand source) mempty
-  whenLeft
-    ()
-    eitherErrorOrUnit
-    (\(ShellFailed _ _) -> throwError "The findata-fetcher tool has failed.")
+  ffPath <- liftEither <$> Turtle.toText $ homeDir </> ".local/bin/findata-fetcher"
+  (exitCode, _) <- Turtle.procStrict ffPath [findataFetcherSourceToCommand source] mempty
+  case exitCode of
+    Turtle.ExitSuccess -> return ()
+    Turtle.ExitFailure _ -> throwError "The findata-fetcher tool has failed."
