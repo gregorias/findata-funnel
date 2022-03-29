@@ -249,7 +249,7 @@ main = do
     parallel $
       fmap
         (\(sourceName, ffSource) -> reportErrors ("Fetching " <> sourceName) $ FF.runFindataFetcher ffSource)
-        [ ("Coop receipts", FF.FFSourceCoop)
+        [ ("Coop receipts", FF.FFSourceCoopSupercard)
         , ("EasyRide receipts", FF.FFSourceEasyRide)
         , ("Galaxus receipts", FF.FFSourceGalaxus)
         , ("Patreon receipts", FF.FFSourcePatreon)
