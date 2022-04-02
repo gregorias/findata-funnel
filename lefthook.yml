@@ -2,6 +2,9 @@ pre-commit:
   scripts:
     "pre-commit.sh":
       runner: bash
+  commands:
+    unit-tests:
+      run: "stack test --ghc-options '-Werror'"
 commit-msg:
   commands:
     commitlint:

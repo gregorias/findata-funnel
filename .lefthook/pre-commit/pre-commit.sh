@@ -70,13 +70,6 @@ function format-files {
   fi
 }
 
-function run-unit-tests {
-  if ! stack test --ghc-options "-j7 -Werror"; then
-    echo 'Pre-commit failed, because unit tests failed.'
-    exit 1
-  fi
-}
-
 function run-weeder {
   if ! weeder; then
     echo 'Pre-commit failed, because weeder detected some dead code.'
@@ -86,4 +79,3 @@ function run-weeder {
 
 format-files
 stack clean
-run-unit-tests
