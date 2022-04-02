@@ -70,12 +70,4 @@ function format-files {
   fi
 }
 
-function run-weeder {
-  if ! weeder; then
-    echo 'Pre-commit failed, because weeder detected some dead code.'
-    exit 1
-  fi
-}
-
 format-files
-stack clean

@@ -1,6 +1,6 @@
 pre-commit:
   scripts:
-    "pre-commit.sh":
+    "format-changed-hs-files.bash":
       runner: bash
   commands:
     unit-tests:
