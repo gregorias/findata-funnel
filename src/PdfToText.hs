@@ -5,9 +5,10 @@ module PdfToText (
 ) where
 
 import Control.Exception (try)
-import Control.Monad.Except (MonadError (throwError))
+import Control.Monad.Except (MonadError (throwError), liftEither)
 import Data.Either.Combinators (whenLeft)
 import Relude hiding (whenLeft)
+import Turtle ((</>))
 import qualified Turtle
 
 -- | Runs 'pdftotext' utility.
@@ -35,7 +36,8 @@ pdf2txt ::
   -- | Output text
   io Text
 pdf2txt pdf = do
-  let pdf2txtexe = "/home/grzesiek/.local/bin/pdf2txt"
+  homeDir <- Turtle.home
+  pdf2txtexe <- liftEither <$> Turtle.toText $ homeDir </> ".local/bin/pdf2txt"
   (exitCode, txt) <- Turtle.procStrict pdf2txtexe [pdf] mempty
   case exitCode of
     Turtle.ExitSuccess -> return txt
