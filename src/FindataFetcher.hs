@@ -33,7 +33,7 @@ runFindataFetcher :: (MonadError e m, MonadIO m, e ~ Text) => FindataFetcherSour
 runFindataFetcher source = do
   homeDir <- home
   ffPath <- liftEither <$> Turtle.toText $ homeDir </> ".local/bin/findata-fetcher"
-  configFilePath <- liftEither <$> Turtle.toText $ homeDir </> "Code/findata-fetcher/config.json"
+  configFilePath <- liftEither <$> Turtle.toText $ homeDir </> "Code/findata/fetcher/config.json"
   (exitCode, _) <-
     Turtle.procStrict
       ffPath
