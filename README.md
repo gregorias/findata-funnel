@@ -6,12 +6,20 @@ financial data into my ledger.
 
 ## Development
 
+This section is intended for developrs.
+
 ### Dev environment setup
 
-Set up npm:
+#### Install Git hook tools
 
-    npm install
+1. Set up yarn packages:
 
-Install lefthook:
+   ```shell
+   yarn install
+   ```
 
-    lefthook install
+2. Install lefthook:
+
+   ```shell
+   lefthook install
+   ```

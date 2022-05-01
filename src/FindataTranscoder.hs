@@ -38,7 +38,7 @@ findataTranscoder ::
   Turtle.Shell Turtle.Line ->
   m Text
 findataTranscoder source inputContent = do
-  let ftPath = "/home/grzesiek/.local/bin/findata-transcoder"
+  let ftPath = "/Users/grzesiek/.local/bin/findata-transcoder"
   (exitCode, txt) <- Turtle.procStrict ftPath [findataTranscoderSourceToCommand source] inputContent
   case exitCode of
     Turtle.ExitSuccess -> return txt
