@@ -44,6 +44,11 @@ getWalletDir = do
 getWallet :: (MonadIO m) => m Turtle.FilePath
 getWallet = getWalletDir <&> (</> "wallet.txt")
 
+cdDownloads :: (MonadIO io) => io ()
+cdDownloads = do
+  homeDir <- home
+  cd $ homeDir </> Turtle.fromText "Downloads"
+
 reportErrors :: (MonadIO io) => Text -> ExceptT Text io () -> io ExitCode
 reportErrors name action = do
   eitherErrorOrValue <- runExceptT action
@@ -52,10 +57,15 @@ reportErrors name action = do
     (const $ return ExitSuccess)
     eitherErrorOrValue
 
-cdDownloads :: (MonadIO io) => io ()
-cdDownloads = do
-  homeDir <- home
-  cd $ homeDir </> Turtle.fromText "Downloads"
+-- | Runs the action for each matching file in '~/Downloads'.
+forFileInDls :: String -> (Turtle.FilePath -> ExceptT Text Shell ()) -> Shell ExitCode
+forFileInDls globStr action = do
+  cdDownloads
+  file :: Turtle.FilePath <- ls $ Turtle.fromText "."
+  let glob = compile globStr
+  if match glob (Turtle.encodeString file)
+    then reportErrors ("Processing " <> fpToText file) $ action file
+    else return ExitSuccess
 
 textifyAndMovePdf ::
   (MonadError e m, MonadIO m, e ~ Text) =>
@@ -171,15 +181,6 @@ moveGPayslipToWallet pdf = flip catchError prependContext $ do
     throwError $
       "Could not move Google Payslip (" <> pdfPath <> ") to the wallet file.\n" <> errMsg
 
-moveGPayslipsToWallet :: Shell ExitCode
-moveGPayslipsToWallet = do
-  cdDownloads
-  file <- ls $ Turtle.fromText "."
-  bool
-    (return ExitSuccess)
-    (reportErrors ("Parsing " <> fpToText file) $ moveGPayslipToWallet file)
-    (match (compile "gpayslip*.pdf") (Turtle.encodeString file))
-
 movePatreonReceipt :: (MonadError e m, MonadManaged m, e ~ Text) => Turtle.FilePath -> m ()
 movePatreonReceipt stmt = void $ parseAndAppendStatement FindataTranscoderPatreon stmt
 
@@ -261,7 +262,7 @@ main = do
   anyCoopParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
   anyDegiroPortfolioParseAndAppendFailure <- Turtle.fold parseAndAppendDegiroPortfolioStatement (Foldl.any isExitFailure)
   anyGalaxusFailure <- Turtle.fold moveGalaxusReceipts (Foldl.any isExitFailure)
-  anyGPayslipFailure <- Turtle.fold moveGPayslipsToWallet (Foldl.any isExitFailure)
+  anyGPayslipFailure <- Turtle.fold (forFileInDls "gpayslip*.pdf" moveGPayslipToWallet) (Foldl.any isExitFailure)
   anyPatreonParseAndMoveFailure <- Turtle.fold movePatreonReceipts (Foldl.any isExitFailure)
   anyRevolutParseAndMoveFailure <- Turtle.fold parseAndMoveRevolutCsvStatements (Foldl.any isExitFailure)
   anySplitwiseParseAndAppendFailure <- Turtle.fold parseAndAppendSplitwise (Foldl.any isExitFailure)
