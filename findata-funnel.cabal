@@ -39,7 +39,6 @@ library
   build-depends:
       Glob
     , base >=4.13 && <5
-    , either
     , foldl
     , managed
     , mtl

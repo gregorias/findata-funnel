@@ -5,11 +5,11 @@ module PdfToText (
   PdfToTextMode (..),
 ) where
 
-import Control.Exception (try)
 import Control.Monad.Except (MonadError (throwError), liftEither)
-import Data.Either.Combinators (whenLeft)
+import Control.Monad.Managed (Managed, with)
+import qualified Data.Text.IO as T
 import Relude hiding (whenLeft)
-import Turtle ((</>))
+import Turtle (ExitCode (ExitFailure, ExitSuccess), (</>))
 import qualified Turtle
 
 data PdfToTextMode = Raw | Layout
@@ -17,23 +17,45 @@ data PdfToTextMode = Raw | Layout
 -- | Runs 'pdftotext' utility.
 --
 -- https://en.wikipedia.org/wiki/Pdftotext
+--
+-- This function returns an in-memory text, which makes this function
+-- unsuitable for large files, but allows callers to decide whether they want
+-- to interact with the filesystem. In the context of findata-funnel, I don't
+-- think large files will happen, so the return type makes this function more
+-- composable.
 pdftotext ::
   (MonadError e m, MonadIO m, e ~ Text) =>
   PdfToTextMode ->
   -- | Input PDF path
-  Text ->
-  -- | Output text path
-  Text ->
-  m ()
-pdftotext mode pdfFile txtFile = do
+  Turtle.FilePath ->
+  -- | The transcoded PDF
+  m Text
+pdftotext mode pdfFile = do
   let modeArg = case mode of
         Raw -> "-raw"
         Layout -> "-layout"
-  result <-
-    liftIO $
-      try @Turtle.ExitCode . Turtle.sh . void $
-        Turtle.inproc "pdftotext" [modeArg, pdfFile, txtFile] mempty
-  whenLeft result (const . throwError $ "pdftotext has failed.")
+  maybeTxt :: Either Text Text <- liftIO $
+    unsafeRunManaged $ do
+      txtFile <- Turtle.mktempfile (Turtle.decodeString "/tmp") ""
+      (exitCode, _, stderr') <-
+        liftIO $
+          Turtle.procStrictWithErr
+            "pdftotext"
+            [modeArg, fpToText pdfFile, fpToText txtFile]
+            mempty
+      case exitCode of
+        ExitFailure _ -> return $ Left ("pdftotext has failed.\n" <> stderr')
+        ExitSuccess -> liftIO $ Right <$> T.readFile (Turtle.encodeString txtFile)
+  either throwError return maybeTxt
+ where
+  fromEither :: Either a a -> a
+  fromEither = either id id
+
+  fpToText :: Turtle.FilePath -> Text
+  fpToText = fromEither . Turtle.toText
+
+  unsafeRunManaged :: Managed a -> IO a
+  unsafeRunManaged = flip with return
 
 -- | Runs 'pdf2txt' utility.
 pdf2txt ::
