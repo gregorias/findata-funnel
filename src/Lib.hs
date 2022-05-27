@@ -12,7 +12,7 @@ import FindataTranscoder (
   FindataTranscoderSource (..),
   findataTranscoder,
  )
-import PdfToText (pdf2txt, pdftotext)
+import PdfToText (PdfToTextMode (..), pdf2txt, pdftotext)
 import Relude
 import System.FilePath.Glob (compile, match)
 import Turtle (
@@ -77,7 +77,7 @@ textifyAndMovePdf ::
 textifyAndMovePdf subdir pdf = do
   walletDir <- getWalletDir
   let txt = walletDir </> subdir </> (pdf <.> "txt")
-  pdftotext (fpToText pdf) (fpToText txt)
+  pdftotext Raw (fpToText pdf) (fpToText txt)
   rm pdf
 
 textifyAndMoveBcgeCcPdfStatement :: Shell ExitCode
