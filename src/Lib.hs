@@ -7,7 +7,6 @@ import qualified Control.Foldl as Foldl
 import Control.Monad.Except (MonadError (catchError, throwError))
 import Control.Monad.Managed (MonadManaged)
 import Data.Text.IO (hPutStr)
-import qualified Data.Text.IO as T
 import qualified FindataFetcher as FF
 import FindataTranscoder (
   FindataTranscoderSource (..),
@@ -77,9 +76,8 @@ textifyAndMovePdf ::
   m ()
 textifyAndMovePdf subdir pdf = do
   walletDir <- getWalletDir
-  txtContent <- pdftotext Raw pdf
   let txtFile = walletDir </> subdir </> (pdf <.> "txt")
-  liftIO $ T.writeFile (Turtle.encodeString txtFile) txtContent
+  pdftotext Raw pdf txtFile
   rm pdf
 
 textifyAndMoveBcgeCcPdfStatement :: Shell ExitCode

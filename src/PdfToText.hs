@@ -6,8 +6,6 @@ module PdfToText (
 ) where
 
 import Control.Monad.Except (MonadError (throwError), liftEither)
-import Control.Monad.Managed (Managed, with)
-import qualified Data.Text.IO as T
 import Relude hiding (whenLeft)
 import Turtle (ExitCode (ExitFailure, ExitSuccess), (</>))
 import qualified Turtle
@@ -28,34 +26,29 @@ pdftotext ::
   PdfToTextMode ->
   -- | Input PDF path
   Turtle.FilePath ->
+  -- | Output txt file path
+  Turtle.FilePath ->
   -- | The transcoded PDF
-  m Text
-pdftotext mode pdfFile = do
+  m ()
+pdftotext mode pdfFile txtFile = do
   let modeArg = case mode of
         Raw -> "-raw"
         Layout -> "-layout"
-  maybeTxt :: Either Text Text <- liftIO $
-    unsafeRunManaged $ do
-      txtFile <- Turtle.mktempfile (Turtle.decodeString "/tmp") ""
-      (exitCode, _, stderr') <-
-        liftIO $
-          Turtle.procStrictWithErr
-            "pdftotext"
-            [modeArg, fpToText pdfFile, fpToText txtFile]
-            mempty
-      case exitCode of
-        ExitFailure _ -> return $ Left ("pdftotext has failed.\n" <> stderr')
-        ExitSuccess -> liftIO $ Right <$> T.readFile (Turtle.encodeString txtFile)
-  either throwError return maybeTxt
+  (exitCode, _, stderr') <-
+    liftIO $
+      Turtle.procStrictWithErr
+        "pdftotext"
+        [modeArg, fpToText pdfFile, fpToText txtFile]
+        mempty
+  case exitCode of
+    ExitFailure _ -> throwError $ "pdftotext has failed.\n" <> stderr'
+    ExitSuccess -> return ()
  where
   fromEither :: Either a a -> a
   fromEither = either id id
 
   fpToText :: Turtle.FilePath -> Text
   fpToText = fromEither . Turtle.toText
-
-  unsafeRunManaged :: Managed a -> IO a
-  unsafeRunManaged = flip with return
 
 -- | Runs 'pdf2txt' utility.
 pdf2txt ::
