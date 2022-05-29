@@ -1,13 +1,12 @@
 -- | This module handles using pdf to text utilities.
 module PdfToText (
-  pdf2txt,
   pdftotext,
   PdfToTextMode (..),
 ) where
 
-import Control.Monad.Except (MonadError (throwError), liftEither)
+import Control.Monad.Except (MonadError (throwError))
 import Relude hiding (whenLeft)
-import Turtle (ExitCode (ExitFailure, ExitSuccess), (</>))
+import Turtle (ExitCode (ExitFailure, ExitSuccess))
 import qualified Turtle
 
 data PdfToTextMode = Raw | Layout
@@ -49,18 +48,3 @@ pdftotext mode pdfFile txtFile = do
 
   fpToText :: Turtle.FilePath -> Text
   fpToText = fromEither . Turtle.toText
-
--- | Runs 'pdf2txt' utility.
-pdf2txt ::
-  (MonadError e io, MonadIO io, e ~ Text) =>
-  -- | Input PDF path
-  Text ->
-  -- | Output text
-  io Text
-pdf2txt pdf = do
-  homeDir <- Turtle.home
-  pdf2txtexe <- liftEither <$> Turtle.toText $ homeDir </> ".local/bin/pdf2txt"
-  (exitCode, txt) <- Turtle.procStrict pdf2txtexe [pdf] mempty
-  case exitCode of
-    Turtle.ExitSuccess -> return txt
-    Turtle.ExitFailure _ -> throwError "pdf2txt has failed.\n"

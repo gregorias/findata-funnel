@@ -57,7 +57,6 @@ default-extensions:
 
 dependencies:
 - base >= 4.13 && < 5
-- relude
 
 # no-type-defaults, this is dangerous, but in terms of convenience it's so
 # useful to use ExtendedDefaultRules that I keep it.
@@ -84,6 +83,7 @@ library:
   - managed
   - mtl
   - parallel-io
+  - relude
   - text
   - turtle
 
@@ -98,6 +98,7 @@ executables:
     - -Wunused-packages
     dependencies:
     - findata-funnel
+    - relude
 
 tests:
   findata-funnel-test:
@@ -117,3 +118,10 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     - -Wunused-packages
+    dependencies:
+    - findata-funnel
+    - hspec
+    - managed
+    - mtl
+    - text
+    - turtle
