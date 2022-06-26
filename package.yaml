@@ -19,7 +19,6 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/gregorias/findata-funnel#readme>
 
 # Some defaults recommended by https://kowainik.github.io/posts/2019-02-06-style-guide#default-extensions
-# Also use Relude
 default-extensions:
   BangPatterns
   DataKinds
@@ -39,7 +38,6 @@ default-extensions:
   LambdaCase
   MultiParamTypeClasses
   MultiWayIf
-  NoImplicitPrelude
   NumericUnderscores
   OverloadedLabels
   OverloadedLists
@@ -83,7 +81,6 @@ library:
   - managed
   - mtl
   - parallel-io
-  - relude
   - text
   - turtle
 
@@ -98,7 +95,6 @@ executables:
     - -Wunused-packages
     dependencies:
     - findata-funnel
-    - relude
 
 tests:
   findata-funnel-test:

@@ -5,7 +5,8 @@ module FindataTranscoder (
 ) where
 
 import Control.Monad.Except (MonadError (throwError))
-import Relude hiding (whenLeft)
+import Control.Monad.IO.Class (MonadIO)
+import Data.Text (Text)
 import qualified Turtle
 
 data FindataTranscoderSource

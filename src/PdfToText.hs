@@ -5,7 +5,8 @@ module PdfToText (
 ) where
 
 import Control.Monad.Except (MonadError (throwError))
-import Relude hiding (whenLeft)
+import Control.Monad.IO.Class (MonadIO (liftIO))
+import Data.Text (Text)
 import Turtle (ExitCode (ExitFailure, ExitSuccess))
 import qualified Turtle
 

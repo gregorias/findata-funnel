@@ -6,9 +6,14 @@ module Lib (
 
 import Control.Concurrent.ParallelIO.Global (parallel)
 import qualified Control.Foldl as Foldl
-import Control.Monad.Except (MonadError (catchError, throwError))
+import Control.Monad (void, when)
+import Control.Monad.Except (ExceptT, MonadError (catchError, throwError), runExceptT)
+import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Managed (MonadManaged)
 import qualified Control.Monad.Managed as Managed
+import Data.Bool (bool)
+import Data.Functor ((<&>))
+import Data.Text (Text)
 import Data.Text.IO (hPutStr)
 import qualified Data.Text.IO as T
 import qualified FindataFetcher as FF
@@ -17,8 +22,8 @@ import FindataTranscoder (
   findataTranscoder,
  )
 import PdfToText (PdfToTextMode (..), pdftotext)
-import Relude
 import System.FilePath.Glob (compile, match)
+import System.IO (stderr)
 import Turtle (
   ExitCode (ExitFailure, ExitSuccess),
   Line,
@@ -195,7 +200,7 @@ moveGPayslipToWallet wallet pdf = flip catchError prependContext $ do
       maybeSuccess :: (Either Text ()) <- runExceptT $ pdftotext Layout pdf' tmpTxt
       liftIO $
         sequence $
-          T.readFile (toString $ Turtle.encodeString tmpTxt) <$ maybeSuccess
+          T.readFile (Turtle.encodeString tmpTxt) <$ maybeSuccess
     either throwError return maybeContent
 
 movePatreonReceipt :: (MonadError e m, MonadManaged m, e ~ Text) => Turtle.FilePath -> m ()

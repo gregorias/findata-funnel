@@ -4,7 +4,8 @@ module Turtle.Extra (
 ) where
 
 import Control.Monad.Except (MonadError (throwError))
-import Relude
+import Data.List.NonEmpty (NonEmpty)
+import Data.Text (Text)
 import qualified Turtle
 
 emptyLine :: NonEmpty Turtle.Line

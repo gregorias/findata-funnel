@@ -5,7 +5,8 @@ module FindataFetcher (
 ) where
 
 import Control.Monad.Except (MonadError (throwError), liftEither)
-import Relude
+import Control.Monad.IO.Class (MonadIO)
+import Data.Text (Text)
 import Turtle (
   home,
   (</>),
