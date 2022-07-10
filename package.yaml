@@ -105,6 +105,12 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     - -Wunused-packages
+    dependencies:
+    - findata-funnel
+    - foldl
+    - hspec
+    - text
+    - turtle
 
   integration-test:
     main:                Main.hs

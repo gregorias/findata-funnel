@@ -1,6 +1,9 @@
 module Main (main) where
 
+import Test.Hspec (hspec)
+import qualified Test.Turtle.Extra
 import Prelude
 
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = hspec $ do
+  Test.Turtle.Extra.tests
