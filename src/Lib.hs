@@ -12,6 +12,7 @@ import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Managed (MonadManaged)
 import qualified Control.Monad.Managed as Managed
 import Data.Bool (bool)
+import Data.Either.Extra (fromEither)
 import Data.Functor ((<&>))
 import Data.Text (Text)
 import Data.Text.IO (hPutStr)
@@ -38,9 +39,6 @@ import Turtle (
  )
 import qualified Turtle
 import Turtle.Extra (decodePathM, emptyLine)
-
-fromEither :: Either a a -> a
-fromEither = either id id
 
 fpToText :: Turtle.FilePath -> Text
 fpToText = fromEither . Turtle.toText

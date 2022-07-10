@@ -6,6 +6,7 @@ module PdfToText (
 
 import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.IO.Class (MonadIO (liftIO))
+import Data.Either.Extra (fromEither)
 import Data.Text (Text)
 import Turtle (ExitCode (ExitFailure, ExitSuccess))
 import qualified Turtle
@@ -44,8 +45,5 @@ pdftotext mode pdfFile txtFile = do
     ExitFailure _ -> throwError $ "pdftotext has failed.\n" <> stderr'
     ExitSuccess -> return ()
  where
-  fromEither :: Either a a -> a
-  fromEither = either id id
-
   fpToText :: Turtle.FilePath -> Text
   fpToText = fromEither . Turtle.toText
