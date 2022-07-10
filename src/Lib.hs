@@ -271,7 +271,10 @@ main = do
   fetchingExitCodes :: [ExitCode] <-
     parallel $
       fmap
-        (\(sourceName, ffSource) -> reportErrors ("Fetching " <> sourceName) $ FF.runFindataFetcher ffSource)
+        ( \(sourceName, ffSource) ->
+            reportErrors ("Fetching " <> sourceName) $
+              void $ FF.runFindataFetcher ffSource
+        )
         [ ("Coop receipts", FF.FFSourceCoopSupercard)
         , ("EasyRide receipts", FF.FFSourceEasyRide)
         , ("Galaxus receipts", FF.FFSourceGalaxus)

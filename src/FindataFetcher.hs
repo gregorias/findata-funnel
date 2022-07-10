@@ -19,6 +19,7 @@ data FindataFetcherSource
   | FFSourceGalaxus
   | FFSourcePatreon
   | FFSourceRevolutMail
+  | FFSourceSplitwise
   | FFSourceUberEats
 
 findataFetcherSourceToCommand :: FindataFetcherSource -> Text
@@ -27,15 +28,22 @@ findataFetcherSourceToCommand FFSourceEasyRide = "pull-easyride-receipts"
 findataFetcherSourceToCommand FFSourceGalaxus = "pull-galaxus"
 findataFetcherSourceToCommand FFSourcePatreon = "pull-patreon"
 findataFetcherSourceToCommand FFSourceRevolutMail = "pull-revolut-mail"
+findataFetcherSourceToCommand FFSourceSplitwise = "pull-splitwise"
 findataFetcherSourceToCommand FFSourceUberEats = "pull-uber-eats"
 
 -- | Runs findata-fetcher
-runFindataFetcher :: (MonadError e m, MonadIO m, e ~ Text) => FindataFetcherSource -> m ()
+runFindataFetcher ::
+  (MonadError e m, MonadIO m, e ~ Text) =>
+  FindataFetcherSource ->
+  m Text
 runFindataFetcher source = do
   homeDir <- home
   ffPath <- liftEither <$> Turtle.toText $ homeDir </> ".local/bin/findata-fetcher"
-  configFilePath <- liftEither <$> Turtle.toText $ homeDir </> "Code/findata/fetcher/config.json"
-  (exitCode, _) <-
+  configFilePath <-
+    liftEither
+      <$> Turtle.toText
+      $ homeDir </> "Code/findata/fetcher/config.json"
+  (exitCode, stdout) <-
     Turtle.procStrict
       ffPath
       [ "--config_file=" <> configFilePath
@@ -43,5 +51,5 @@ runFindataFetcher source = do
       ]
       mempty
   case exitCode of
-    Turtle.ExitSuccess -> return ()
+    Turtle.ExitSuccess -> return stdout
     Turtle.ExitFailure _ -> throwError "The findata-fetcher tool has failed."
