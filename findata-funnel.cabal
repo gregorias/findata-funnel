@@ -29,6 +29,7 @@ library
       Lib
       PdfToText
       Turtle.Extra
+      Wallet
   other-modules:
       Paths_findata_funnel
   hs-source-dirs:

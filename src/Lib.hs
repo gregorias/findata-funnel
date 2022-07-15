@@ -13,7 +13,6 @@ import Control.Monad.Managed (MonadManaged)
 import qualified Control.Monad.Managed as Managed
 import Data.Bool (bool)
 import Data.Either.Extra (fromEither)
-import Data.Functor ((<&>))
 import Data.Text (Text)
 import Data.Text.IO (hPutStr)
 import qualified Data.Text.IO as T
@@ -39,17 +38,10 @@ import Turtle (
  )
 import qualified Turtle
 import Turtle.Extra (decodePathM, emptyLine)
+import Wallet (appendToWallet, getWallet, getWalletDir)
 
 fpToText :: Turtle.FilePath -> Text
 fpToText = fromEither . Turtle.toText
-
-getWalletDir :: (MonadIO m) => m Turtle.FilePath
-getWalletDir = do
-  homeDir <- home
-  return $ homeDir </> Turtle.fromText "Documents/Finance/Wallet"
-
-getWallet :: (MonadIO m) => m Turtle.FilePath
-getWallet = getWalletDir <&> (</> "wallet.txt")
 
 cdDownloads :: (MonadIO io) => io ()
 cdDownloads = do
@@ -135,20 +127,6 @@ parseAndMoveStatement findataTranscoderSource stmt = do
   Turtle.output stmtLedger (Turtle.select $ Turtle.textToLines ledgerOutput)
   rm stmt
   return stmtLedger
-
-shellNewline :: Shell Line
-shellNewline = return mempty
-
--- | Appends the transaction to the wallet.
-appendToWallet ::
-  (MonadIO io) =>
-  -- | Transaction
-  Shell Line ->
-  io ()
-appendToWallet transaction = do
-  wallet <- getWallet
-  Turtle.append wallet shellNewline
-  Turtle.append wallet transaction
 
 parseAndAppendStatement ::
   (MonadError e m, e ~ Text, MonadManaged m) =>
