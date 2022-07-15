@@ -203,15 +203,6 @@ parseAndMoveRevolutCsvStatements = do
     (reportErrors ("Parsing " <> fpToText file) $ parseAndMoveRevolutCsvStatement file)
     (match (compile "revolut-account-statement*.csv") (Turtle.encodeString file))
 
-parseAndAppendSplitwise :: Shell ExitCode
-parseAndAppendSplitwise = do
-  cdDownloads
-  file <- ls $ Turtle.fromText "."
-  bool
-    (return ExitSuccess)
-    (reportErrors ("Parsing " <> fpToText file) $ void (parseAndAppendStatement FindataTranscoderSplitwise file >> rm file))
-    (match (compile "splitwise.csv") (Turtle.encodeString file))
-
 moveGalaxusReceipts :: Shell ExitCode
 moveGalaxusReceipts = do
   cdDownloads
@@ -279,7 +270,6 @@ main = do
       (Foldl.any isExitFailure)
   anyPatreonParseAndMoveFailure <- Turtle.fold movePatreonReceipts (Foldl.any isExitFailure)
   anyRevolutParseAndMoveFailure <- Turtle.fold parseAndMoveRevolutCsvStatements (Foldl.any isExitFailure)
-  anySplitwiseParseAndAppendFailure <- Turtle.fold parseAndAppendSplitwise (Foldl.any isExitFailure)
   anyUberEatsFailure <- Turtle.fold moveUberEatsBills (Foldl.any isExitFailure)
   when
     ( any isExitFailure fetchingExitCodes
@@ -291,7 +281,6 @@ main = do
         || anyGPayslipFailure
         || anyPatreonParseAndMoveFailure
         || anyRevolutParseAndMoveFailure
-        || anySplitwiseParseAndAppendFailure
         || anyUberEatsFailure
     )
     (exit (ExitFailure 1))
