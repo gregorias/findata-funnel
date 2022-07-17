@@ -4,13 +4,11 @@ module FindataFetcher (
   runFindataFetcher,
 ) where
 
-import Control.Monad.Except (MonadError (throwError), liftEither)
+import Control.Exception.Extra (eitherToIO, failIO)
 import Control.Monad.IO.Class (MonadIO)
 import Data.Text (Text)
-import Turtle (
-  home,
-  (</>),
- )
+import qualified Data.Text as T
+import Turtle (home, (</>))
 import qualified Turtle
 
 data FindataFetcherSource
@@ -33,16 +31,20 @@ findataFetcherSourceToCommand FFSourceUberEats = "pull-uber-eats"
 
 -- | Runs findata-fetcher
 runFindataFetcher ::
-  (MonadError e m, MonadIO m, e ~ Text) =>
+  (MonadIO m) =>
   FindataFetcherSource ->
+  -- The stdout of findata-fetcher
   m Text
 runFindataFetcher source = do
   homeDir <- home
-  ffPath <- liftEither <$> Turtle.toText $ homeDir </> ".local/bin/findata-fetcher"
+  ffPath <-
+    eitherToFailIO
+      ("Could not convert findata-fetcher path to text.\n" <>)
+      (Turtle.toText $ homeDir </> ".local/bin/findata-fetcher")
   configFilePath <-
-    liftEither
-      <$> Turtle.toText
-      $ homeDir </> "Code/findata/fetcher/config.json"
+    eitherToFailIO
+      ("Could not convert findata-fetcher config path to text.\n" <>)
+      (Turtle.toText $ homeDir </> "Code/findata/fetcher/config.json")
   (exitCode, stdout) <-
     Turtle.procStrict
       ffPath
@@ -52,4 +54,7 @@ runFindataFetcher source = do
       mempty
   case exitCode of
     Turtle.ExitSuccess -> return stdout
-    Turtle.ExitFailure _ -> throwError "The findata-fetcher tool has failed."
+    Turtle.ExitFailure _ -> failIO "The findata-fetcher tool has failed.\n"
+ where
+  eitherToFailIO :: (MonadIO io) => (a -> Text) -> Either a b -> io b
+  eitherToFailIO f = eitherToIO (userError . T.unpack . f)

@@ -1,3 +1,5 @@
+{-# LANGUAGE PartialTypeSignatures #-}
+
 module Lib (
   main,
   -- | Exports of individual handlers for testing purposes.
@@ -5,6 +7,7 @@ module Lib (
 ) where
 
 import Control.Concurrent.ParallelIO.Global (parallel)
+import Control.Exception (tryJust)
 import qualified Control.Foldl as Foldl
 import Control.Monad (void, when)
 import Control.Monad.Except (ExceptT, MonadError (catchError, throwError), runExceptT)
@@ -14,6 +17,7 @@ import qualified Control.Monad.Managed as Managed
 import Data.Bool (bool)
 import Data.Either.Extra (fromEither)
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Text.IO (hPutStr)
 import qualified Data.Text.IO as T
 import qualified FindataFetcher as FF
@@ -24,6 +28,7 @@ import FindataTranscoder (
 import PdfToText (PdfToTextMode (..), pdftotext)
 import System.FilePath.Glob (compile, match)
 import System.IO (stderr)
+import System.IO.Error (isUserError)
 import Turtle (
   ExitCode (ExitFailure, ExitSuccess),
   Line,
@@ -55,6 +60,14 @@ reportErrors name action = do
     (\e -> liftIO $ hPutStr stderr (name <> " has failed.\n" <> e) >> return (ExitFailure 1))
     (const $ return ExitSuccess)
     eitherErrorOrValue
+
+reportExceptions :: (MonadIO io) => Text -> IO () -> io ExitCode
+reportExceptions name action = do
+  (result :: Either _ _) <- liftIO $ tryJust (\e -> if isUserError e then Just e else Nothing) action
+  either
+    (\e -> liftIO $ hPutStr stderr (name <> " has failed.\n" <> T.pack (show e)) >> return (ExitFailure 1))
+    (const $ return ExitSuccess)
+    result
 
 -- | Runs the action for each matching file in '~/Downloads'.
 forFileInDls :: String -> (Turtle.FilePath -> ExceptT Text Shell ()) -> Shell ExitCode
@@ -239,8 +252,8 @@ main = do
     parallel $
       fmap
         ( \(sourceName, ffSource) ->
-            reportErrors ("Fetching " <> sourceName) $
-              void $ FF.runFindataFetcher ffSource
+            reportExceptions ("Fetching " <> sourceName) $
+              void (FF.runFindataFetcher ffSource)
         )
         [ ("Coop receipts", FF.FFSourceCoopSupercard)
         , ("EasyRide receipts", FF.FFSourceEasyRide)
