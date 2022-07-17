@@ -81,6 +81,7 @@ library:
   - Glob
   - managed
   - mtl
+  - optparse-applicative
   - parallel-io
   - text
   - turtle

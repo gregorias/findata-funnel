@@ -24,11 +24,13 @@ source-repository head
 
 library
   exposed-modules:
+      CLI
       Control.Exception.Extra
       FindataFetcher
       FindataTranscoder
       Lib
       PdfToText
+      Splitwise
       Turtle.Extra
       Wallet
   other-modules:
@@ -45,6 +47,7 @@ library
     , foldl
     , managed
     , mtl
+    , optparse-applicative
     , parallel-io
     , text
     , turtle
