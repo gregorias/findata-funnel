@@ -2,13 +2,14 @@
 module Wallet (
   getWalletDir,
   getWallet,
-  appendToWallet,
+  appendTransactionToWallet,
 ) where
 
 import Control.Monad.IO.Class (MonadIO)
 import Turtle (home, (<&>), (</>))
 import qualified Turtle
 import Turtle.Extra (emptyLine)
+import qualified Turtle.Extra as Turtle
 
 getWalletDir :: (MonadIO m) => m Turtle.FilePath
 getWalletDir = do
@@ -18,13 +19,14 @@ getWalletDir = do
 getWallet :: (MonadIO m) => m Turtle.FilePath
 getWallet = getWalletDir <&> (</> "wallet.txt")
 
--- | Appends the transaction to the wallet.
-appendToWallet ::
+-- | Appends the transaction to a wallet.
+appendTransactionToWallet ::
   (MonadIO io) =>
+  -- | Wallet
+  Turtle.FilePath ->
   -- | Transaction
-  Turtle.Shell Turtle.Line ->
+  Turtle.Shell Turtle.PosixLine ->
   io ()
-appendToWallet transaction = do
-  wallet <- getWallet
+appendTransactionToWallet wallet transaction = do
   Turtle.append wallet (Turtle.select emptyLine)
-  Turtle.append wallet transaction
+  Turtle.append wallet (Turtle.posixLineToLine <$> transaction)

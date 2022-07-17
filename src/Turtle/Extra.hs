@@ -3,6 +3,7 @@ module Turtle.Extra (
   posixLineToText,
   posixLineToLine,
   lineToPosixLine,
+  textToPosixLines,
   posixLinesToText,
   decodePathM,
   emptyLine,

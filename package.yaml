@@ -111,6 +111,8 @@ tests:
     - findata-funnel
     - foldl
     - hspec
+    - managed
+    - neat-interpolation
     - text
     - turtle
 

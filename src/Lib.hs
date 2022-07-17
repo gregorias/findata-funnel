@@ -43,7 +43,8 @@ import Turtle (
  )
 import qualified Turtle
 import Turtle.Extra (decodePathM, emptyLine)
-import Wallet (appendToWallet, getWallet, getWalletDir)
+import qualified Turtle.Extra as Turtle
+import Wallet (appendTransactionToWallet, getWallet, getWalletDir)
 
 fpToText :: Turtle.FilePath -> Text
 fpToText = fromEither . Turtle.toText
@@ -144,7 +145,8 @@ parseAndMoveStatement findataTranscoderSource stmt = do
 parseAndAppendStatement :: (MonadManaged m) => FindataTranscoderSource -> Turtle.FilePath -> m ()
 parseAndAppendStatement findataTranscoderSource stmt = do
   stmtTxt <- findataTranscoder findataTranscoderSource (Turtle.input stmt)
-  appendToWallet (Turtle.select $ Turtle.textToLines stmtTxt)
+  wallet <- getWallet
+  appendTransactionToWallet wallet (Turtle.select $ Turtle.textToPosixLines stmtTxt)
 
 parseAndAppendDegiroPortfolioStatement :: Shell ExitCode
 parseAndAppendDegiroPortfolioStatement = do
