@@ -54,7 +54,7 @@ runFindataFetcher source = do
       mempty
   case exitCode of
     Turtle.ExitSuccess -> return stdout
-    Turtle.ExitFailure _ -> failIO "The findata-fetcher tool has failed.\n"
+    Turtle.ExitFailure _ -> failIO "findata-fetcher has failed.\n"
  where
   eitherToFailIO :: (MonadIO io) => (a -> Text) -> Either a b -> io b
   eitherToFailIO f = eitherToIO (userError . T.unpack . f)

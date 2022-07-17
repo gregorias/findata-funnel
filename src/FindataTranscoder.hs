@@ -4,7 +4,7 @@ module FindataTranscoder (
   FindataTranscoderSource (..),
 ) where
 
-import Control.Monad.Except (MonadError (throwError))
+import Control.Exception.Extra (failIO)
 import Control.Monad.IO.Class (MonadIO)
 import Data.Text (Text)
 import qualified Turtle
@@ -32,8 +32,10 @@ findataTranscoderSourceToCommand FindataTranscoderSplitwise = "parse-splitwise"
 findataTranscoderSourceToCommand FindataTranscoderUberEats = "parse-uber-eats"
 
 -- | Runs findata-transcoder.
+--
+-- Throws 'userError' on failure.
 findataTranscoder ::
-  (MonadError e m, MonadIO m, e ~ Text) =>
+  (MonadIO m) =>
   FindataTranscoderSource ->
   -- | Text input.
   Turtle.Shell Turtle.Line ->
@@ -43,4 +45,4 @@ findataTranscoder source inputContent = do
   (exitCode, txt) <- Turtle.procStrict ftPath [findataTranscoderSourceToCommand source] inputContent
   case exitCode of
     Turtle.ExitSuccess -> return txt
-    Turtle.ExitFailure _ -> throwError "findata-transcoder has failed.\n"
+    Turtle.ExitFailure _ -> failIO "findata-transcoder has failed.\n"

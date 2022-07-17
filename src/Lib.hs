@@ -129,7 +129,7 @@ parseAndMoveCoopPdfReceipts = do
     (match (compile "Coop *.pdf") (Turtle.encodeString file))
 
 parseAndMoveStatement ::
-  (MonadError e m, MonadIO m, e ~ Text) =>
+  (MonadIO m) =>
   FindataTranscoderSource ->
   Turtle.FilePath ->
   m Turtle.FilePath
@@ -141,11 +141,7 @@ parseAndMoveStatement findataTranscoderSource stmt = do
   rm stmt
   return stmtLedger
 
-parseAndAppendStatement ::
-  (MonadError e m, e ~ Text, MonadManaged m) =>
-  FindataTranscoderSource ->
-  Turtle.FilePath ->
-  m ()
+parseAndAppendStatement :: (MonadManaged m) => FindataTranscoderSource -> Turtle.FilePath -> m ()
 parseAndAppendStatement findataTranscoderSource stmt = do
   stmtTxt <- findataTranscoder findataTranscoderSource (Turtle.input stmt)
   appendToWallet (Turtle.select $ Turtle.textToLines stmtTxt)
@@ -156,7 +152,9 @@ parseAndAppendDegiroPortfolioStatement = do
   file <- ls $ Turtle.fromText "."
   bool
     (return ExitSuccess)
-    (reportErrors ("Parsing " <> fpToText file) $ void (parseAndAppendStatement FindataTranscoderDegiroPortfolio file >> rm file))
+    ( reportErrors ("Parsing " <> fpToText file) $
+        void (parseAndAppendStatement FindataTranscoderDegiroPortfolio file >> rm file)
+    )
     (match (compile "degiro-portfolio.csv") (Turtle.encodeString file))
 
 -- | Moves Google Payslip PDF to the main wallet file.
@@ -192,7 +190,7 @@ moveGPayslipToWallet wallet pdf = flip catchError prependContext $ do
           T.readFile (Turtle.encodeString tmpTxt) <$ maybeSuccess
     either throwError return maybeContent
 
-movePatreonReceipt :: (MonadError e m, MonadManaged m, e ~ Text) => Turtle.FilePath -> m ()
+movePatreonReceipt :: (MonadManaged m) => Turtle.FilePath -> m ()
 movePatreonReceipt stmt = void $ parseAndAppendStatement FindataTranscoderPatreon stmt
 
 movePatreonReceipts :: Shell ExitCode
@@ -204,7 +202,7 @@ movePatreonReceipts = do
     (reportErrors ("Parsing " <> fpToText file) $ void (movePatreonReceipt file >> rm file))
     (match (compile "patreon_*.txt") (Turtle.encodeString file))
 
-parseAndMoveRevolutCsvStatement :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m ()
+parseAndMoveRevolutCsvStatement :: (MonadIO m) => Turtle.FilePath -> m ()
 parseAndMoveRevolutCsvStatement stmt = void $ parseAndMoveStatement FindataTranscoderRevolut stmt
 
 parseAndMoveRevolutCsvStatements :: Shell ExitCode
@@ -225,16 +223,10 @@ moveGalaxusReceipts = do
     (reportErrors ("Moving " <> fpToText file) $ void (moveGalaxusBill file >> rm file))
     (match (compile "*.galaxus") (Turtle.encodeString file))
  where
-  moveGalaxusBill ::
-    (MonadError e m, e ~ Text, MonadManaged m) =>
-    Turtle.FilePath ->
-    m ()
+  moveGalaxusBill :: (MonadManaged m) => Turtle.FilePath -> m ()
   moveGalaxusBill = parseAndAppendStatement FindataTranscoderGalaxus
 
-moveUberEatsBill ::
-  (MonadError e m, e ~ Text, MonadManaged m) =>
-  Turtle.FilePath ->
-  m ()
+moveUberEatsBill :: (MonadManaged m) => Turtle.FilePath -> m ()
 moveUberEatsBill = parseAndAppendStatement FindataTranscoderUberEats
 
 moveUberEatsBills :: Shell ExitCode
