@@ -65,6 +65,7 @@ executable findata-funnel
   build-depends:
       base >=4.13 && <5
     , findata-funnel
+    , optparse-applicative
   default-language: Haskell2010
 
 test-suite findata-funnel-test

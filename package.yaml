@@ -97,6 +97,7 @@ executables:
     - -Wunused-packages
     dependencies:
     - findata-funnel
+    - optparse-applicative
 
 tests:
   findata-funnel-test:
