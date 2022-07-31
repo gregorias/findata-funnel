@@ -3,7 +3,6 @@ module Test.Turtle.Extra (tests) where
 import qualified Control.Foldl as Foldl
 import Control.Monad.IO.Class (MonadIO)
 import Data.Text (Text)
-import NeatInterpolation (trimming)
 import Test.Hspec (shouldBe)
 import qualified Test.Hspec as Hspec
 import qualified Turtle
