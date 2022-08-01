@@ -14,6 +14,7 @@ data FindataTranscoderSource
   | FindataTranscoderBcgeCc
   | FindataTranscoderDegiroAccount
   | FindataTranscoderDegiroPortfolio
+  | FindataTranscoderFinpensionPortfolioTotals
   | FindataTranscoderGalaxus
   | FindataTranscoderGPayslip
   | FindataTranscoderPatreon
@@ -26,6 +27,7 @@ findataTranscoderSourceToCommand FindataTranscoderBcge = "parse-bcge"
 findataTranscoderSourceToCommand FindataTranscoderBcgeCc = "parse-bcge-cc"
 findataTranscoderSourceToCommand FindataTranscoderDegiroAccount = "parse-degiro-account"
 findataTranscoderSourceToCommand FindataTranscoderDegiroPortfolio = "parse-degiro-portfolio"
+findataTranscoderSourceToCommand FindataTranscoderFinpensionPortfolioTotals = "parse-finpension-portfolio-total"
 findataTranscoderSourceToCommand FindataTranscoderGalaxus = "parse-galaxus"
 findataTranscoderSourceToCommand FindataTranscoderGPayslip = "parse-gpayslip"
 findataTranscoderSourceToCommand FindataTranscoderPatreon = "parse-patreon"
