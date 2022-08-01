@@ -26,23 +26,25 @@ individualPipesP :: Parser (IO ())
 individualPipesP =
   subparser
     ( mconcat
-        [ command
-            "pull-bcge"
-            ( info
-                (pure pullBcge <**> helper)
-                (progDesc "Pulls BCGE statement data from Internet and saves it in a Ledger file in the wallet directory.")
-            )
-        , command
-            "pull-degiro-portfolio"
-            ( info
-                (pure pullDegiroPortfolio <**> helper)
-                (progDesc "Pulls Degiro portfolio status data from Internet and appends it to the wallet.")
-            )
-        , command
-            "pull-splitwise"
-            ( info
-                (pure pullSplitwiseFull <**> helper)
-                (progDesc "Pulls Splitwise data from Internet and appends Splitwise status to the wallet.")
-            )
+        [ pullCommand
+            "bcge"
+            "Pulls BCGE statement data from Internet and saves it in a Ledger file in the wallet directory."
+            pullBcge
+        , pullCommand
+            "degiro-portfolio"
+            "Pulls Degiro portfolio status data from Internet and appends it to the wallet."
+            pullDegiroPortfolio
+        , pullCommand
+            "splitwise"
+            "Pulls Splitwise data from Internet and appends Splitwise status to the wallet."
+            pullSplitwiseFull
         ]
     )
+ where
+  pullCommand title description action =
+    command
+      ("pull-" <> title)
+      ( info
+          (pure action <**> helper)
+          (progDesc description)
+      )
