@@ -1,6 +1,7 @@
 -- | This module implements funnelling Splitwise data to a wallet.
 module Splitwise (pullSplitwise) where
 
+import Control.Funnel (fetchTranscodeAppend)
 import Control.Monad.IO.Class (MonadIO)
 import Data.Text (Text)
 import FindataFetcher (FindataFetcherSource (FFSourceSplitwise), runFindataFetcher)
@@ -12,17 +13,6 @@ import Turtle.Extra (
   posixLineToLine,
   textToShell,
  )
-
-fetchTranscodeAppend ::
-  (Monad m) =>
-  -- | The action that fetches data.
-  m Text ->
-  -- | The action that transcodes data.
-  (Text -> m Text) ->
-  -- | The action that transcodes data.
-  (Text -> m ()) ->
-  m ()
-fetchTranscodeAppend fetch transcode append = fetch >>= transcode >>= append
 
 fetchSplitwise :: (MonadIO m) => m Text
 fetchSplitwise = runFindataFetcher FFSourceSplitwise

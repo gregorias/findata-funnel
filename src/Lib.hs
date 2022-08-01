@@ -148,17 +148,6 @@ parseAndAppendStatement findataTranscoderSource stmt = do
   wallet <- getWallet
   appendTransactionToWallet wallet (Turtle.select $ Turtle.textToPosixLines stmtTxt)
 
-parseAndAppendDegiroPortfolioStatement :: Shell ExitCode
-parseAndAppendDegiroPortfolioStatement = do
-  cdDownloads
-  file <- ls $ Turtle.fromText "."
-  bool
-    (return ExitSuccess)
-    ( reportErrors ("Parsing " <> fpToText file) $
-        void (parseAndAppendStatement FindataTranscoderDegiroPortfolio file >> rm file)
-    )
-    (match (compile "degiro-portfolio.csv") (Turtle.encodeString file))
-
 -- | Moves Google Payslip PDF to the main wallet file.
 moveGPayslipToWallet ::
   (MonadError e m, MonadIO m, e ~ Text) =>
@@ -265,10 +254,6 @@ main = do
       parseAndMoveBcgeCcPdfStatement
       (Foldl.any isExitFailure)
   anyCoopParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
-  anyDegiroPortfolioParseAndAppendFailure <-
-    Turtle.fold
-      parseAndAppendDegiroPortfolioStatement
-      (Foldl.any isExitFailure)
   anyGalaxusFailure <- Turtle.fold moveGalaxusReceipts (Foldl.any isExitFailure)
   wallet <- getWallet
   anyGPayslipFailure <-
@@ -283,7 +268,6 @@ main = do
         || anyBcgeCcTextifyAndMovePdfStatementFailure
         || anyBcgeCcParseAndMovePdfStatementFailure
         || anyCoopParseAndMoveFailure
-        || anyDegiroPortfolioParseAndAppendFailure
         || anyGalaxusFailure
         || anyGPayslipFailure
         || anyPatreonParseAndMoveFailure

@@ -26,6 +26,8 @@ library
   exposed-modules:
       CLI
       Control.Exception.Extra
+      Control.Funnel
+      Degiro
       FindataFetcher
       FindataTranscoder
       Lib

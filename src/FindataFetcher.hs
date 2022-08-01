@@ -13,6 +13,7 @@ import qualified Turtle
 
 data FindataFetcherSource
   = FFSourceCoopSupercard
+  | FFSourceDegiroPortfolio
   | FFSourceEasyRide
   | FFSourceGalaxus
   | FFSourcePatreon
@@ -22,6 +23,7 @@ data FindataFetcherSource
 
 findataFetcherSourceToCommand :: FindataFetcherSource -> Text
 findataFetcherSourceToCommand FFSourceCoopSupercard = "pull-coop-supercard"
+findataFetcherSourceToCommand FFSourceDegiroPortfolio = "pull-degiro-portfolio"
 findataFetcherSourceToCommand FFSourceEasyRide = "pull-easyride-receipts"
 findataFetcherSourceToCommand FFSourceGalaxus = "pull-galaxus"
 findataFetcherSourceToCommand FFSourcePatreon = "pull-patreon"

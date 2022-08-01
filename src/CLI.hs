@@ -1,6 +1,7 @@
 -- | A collection of commands to run an e2e update for a specific source.
 module CLI (individualPipesP) where
 
+import Degiro (pullDegiroPortfolio)
 import Options.Applicative (
   Parser,
   command,
@@ -23,10 +24,18 @@ pullSplitwiseFull = do
 individualPipesP :: Parser (IO ())
 individualPipesP =
   subparser
-    ( command
-        "pull-splitwise"
-        ( info
-            (pure pullSplitwiseFull <**> helper)
-            (progDesc "Pulls Splitwise data from the Internet and appends Splitwise status to the wallet.")
-        )
+    ( mconcat
+        [ command
+            "pull-degiro-portfolio"
+            ( info
+                (pure pullDegiroPortfolio <**> helper)
+                (progDesc "Pulls Degiro portfolio status data from Internet and appends it to the wallet.")
+            )
+        , command
+            "pull-splitwise"
+            ( info
+                (pure pullSplitwiseFull <**> helper)
+                (progDesc "Pulls Splitwise data from Internet and appends Splitwise status to the wallet.")
+            )
+        ]
     )
