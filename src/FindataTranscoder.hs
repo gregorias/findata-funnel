@@ -10,7 +10,8 @@ import Data.Text (Text)
 import qualified Turtle
 
 data FindataTranscoderSource
-  = FindataTranscoderBcgeCc
+  = FindataTranscoderBcge
+  | FindataTranscoderBcgeCc
   | FindataTranscoderDegiroAccount
   | FindataTranscoderDegiroPortfolio
   | FindataTranscoderGalaxus
@@ -21,6 +22,7 @@ data FindataTranscoderSource
   | FindataTranscoderUberEats
 
 findataTranscoderSourceToCommand :: FindataTranscoderSource -> Text
+findataTranscoderSourceToCommand FindataTranscoderBcge = "parse-bcge"
 findataTranscoderSourceToCommand FindataTranscoderBcgeCc = "parse-bcge-cc"
 findataTranscoderSourceToCommand FindataTranscoderDegiroAccount = "parse-degiro-account"
 findataTranscoderSourceToCommand FindataTranscoderDegiroPortfolio = "parse-degiro-portfolio"

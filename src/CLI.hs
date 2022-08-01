@@ -1,6 +1,7 @@
 -- | A collection of commands to run an e2e update for a specific source.
 module CLI (individualPipesP) where
 
+import Bcge (pullBcge)
 import Degiro (pullDegiroPortfolio)
 import Options.Applicative (
   Parser,
@@ -26,6 +27,12 @@ individualPipesP =
   subparser
     ( mconcat
         [ command
+            "pull-bcge"
+            ( info
+                (pure pullBcge <**> helper)
+                (progDesc "Pulls BCGE statement data from Internet and saves it in a Ledger file in the wallet directory.")
+            )
+        , command
             "pull-degiro-portfolio"
             ( info
                 (pure pullDegiroPortfolio <**> helper)
