@@ -3,14 +3,17 @@ module CLI (individualPipesP) where
 
 import Bcge (pullBcge)
 import Control.Funnel (fetchTranscodeAppend)
-import Control.Monad.Cont (MonadIO)
+import Control.Monad.Cont (MonadIO, liftIO)
+import Data.ByteString (ByteString)
+import Data.Text (Text)
+import qualified Data.Text.IO as T
 import Degiro (pullDegiroPortfolio)
 import FindataFetcher (
-  FindataFetcherSource (FFSourceFinpensionPortfolioTotal),
+  FindataFetcherSource (FFSourceBcgeCc, FFSourceFinpensionPortfolioTotal),
   runFindataFetcher,
  )
 import FindataTranscoder (
-  FindataTranscoderSource (FindataTranscoderFinpensionPortfolioTotals),
+  FindataTranscoderSource (FindataTranscoderBcgeCc, FindataTranscoderFinpensionPortfolioTotals),
   findataTranscoder,
  )
 import Options.Applicative (
@@ -22,10 +25,23 @@ import Options.Applicative (
   subparser,
   (<**>),
  )
+import PdfToText (PdfToTextInputMode (PttInputModeStdIn), PdfToTextMode (Raw), PdfToTextOutputMode (PttOutputModeStdOut), pdftotext)
 import Splitwise (pullSplitwise)
-import Turtle (select)
+import Turtle (encodeString, select, (</>))
 import Turtle.Extra (posixLineToLine, textToPosixLines, textToShell)
-import Wallet (appendTransactionToWallet, getWallet)
+import Wallet (appendTransactionToWallet, getWallet, getWalletDir)
+
+pullBcgeCc :: (MonadIO m) => m ()
+pullBcgeCc = do
+  bcgeCcPdfStatement :: ByteString <- runFindataFetcher FFSourceBcgeCc
+  textStatement :: Text <-
+    pdftotext Raw (PttInputModeStdIn (return bcgeCcPdfStatement)) PttOutputModeStdOut
+  ledger :: Text <-
+    findataTranscoder FindataTranscoderBcgeCc $
+      posixLineToLine <$> textToShell textStatement
+  walletDir <- getWalletDir
+  let bcgeCcLedger :: FilePath = encodeString $ walletDir </> "updates/bcge-cc.ledger"
+  liftIO $ T.appendFile bcgeCcLedger ledger
 
 pullFinpension :: (MonadIO m) => m ()
 pullFinpension = do
@@ -57,6 +73,10 @@ individualPipesP =
             "bcge"
             "Pulls BCGE statement data from Internet and saves it in a Ledger file in the wallet directory."
             pullBcge
+        , pullCommand
+            "bcge-cc"
+            "Pulls BCGE credit card statement data from Internet and saves it in a Ledger file in the wallet directory."
+            pullBcgeCc
         , pullCommand
             "degiro-portfolio"
             "Pulls Degiro portfolio status data from Internet and appends it to the wallet."

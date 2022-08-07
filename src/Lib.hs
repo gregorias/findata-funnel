@@ -93,26 +93,6 @@ textifyAndMovePdf subdir pdf = do
   pdftotext Raw (PttInputModeFilePath pdf) (PttOutputModeFilePath txtFile)
   rm pdf
 
-textifyAndMoveBcgeCcPdfStatement :: Shell ExitCode
-textifyAndMoveBcgeCcPdfStatement = do
-  cdDownloads
-  file <- ls $ Turtle.fromText "."
-  bool
-    (return ExitSuccess)
-    (reportErrors ("Textifying " <> fpToText file) $ textifyAndMovePdf "updates" file)
-    (match (compile "bcgecc.pdf") (Turtle.encodeString file))
-
-parseAndMoveBcgeCcPdfStatement :: Shell ExitCode
-parseAndMoveBcgeCcPdfStatement = do
-  walletDir <- getWalletDir
-  let targetDir = walletDir </> "updates"
-  cd targetDir
-  file <- ls $ Turtle.fromText "."
-  bool
-    (return ExitSuccess)
-    (reportErrors ("Parsing " <> fpToText file) $ void (parseAndMoveStatement FindataTranscoderBcgeCc file))
-    (match (compile "bcgecc*.txt") (Turtle.encodeString file))
-
 textifyAndMoveCoopPdfReceipt ::
   (MonadIO m) =>
   -- | The path to the PDF receipt.
@@ -247,14 +227,6 @@ main = do
         , ("Revolut statements", FF.FFSourceRevolutMail)
         , ("Uber Eats bills", FF.FFSourceUberEats)
         ]
-  anyBcgeCcTextifyAndMovePdfStatementFailure <-
-    Turtle.fold
-      textifyAndMoveBcgeCcPdfStatement
-      (Foldl.any isExitFailure)
-  anyBcgeCcParseAndMovePdfStatementFailure <-
-    Turtle.fold
-      parseAndMoveBcgeCcPdfStatement
-      (Foldl.any isExitFailure)
   anyCoopParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
   anyGalaxusFailure <- Turtle.fold moveGalaxusReceipts (Foldl.any isExitFailure)
   wallet <- getWallet
@@ -267,8 +239,6 @@ main = do
   anyUberEatsFailure <- Turtle.fold moveUberEatsBills (Foldl.any isExitFailure)
   when
     ( any isExitFailure fetchingExitCodes
-        || anyBcgeCcTextifyAndMovePdfStatementFailure
-        || anyBcgeCcParseAndMovePdfStatementFailure
         || anyCoopParseAndMoveFailure
         || anyGalaxusFailure
         || anyGPayslipFailure
