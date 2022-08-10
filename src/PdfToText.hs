@@ -19,7 +19,7 @@ data PdfToTextMode = Raw | Layout
 
 data PdfToTextOutputMode outputType where
   PttOutputModeFilePath :: Turtle.FilePath -> PdfToTextOutputMode ()
-  PttOutputModeStdOut :: PdfToTextOutputMode ByteString
+  PttOutputModeStdOut :: PdfToTextOutputMode Text
 
 -- | Runs 'pdftotext' utility.
 --
@@ -55,4 +55,4 @@ pdftotext mode pdfFile outputMode = do
 
   outputModeToReturnType :: PdfToTextOutputMode outputType -> ByteString -> outputType
   outputModeToReturnType (PttOutputModeFilePath _) = const ()
-  outputModeToReturnType PttOutputModeStdOut = id
+  outputModeToReturnType PttOutputModeStdOut = decodeUtf8
