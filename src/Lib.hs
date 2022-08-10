@@ -81,7 +81,7 @@ forFileInDls globStr action = do
     else return ExitSuccess
 
 textifyAndMovePdf ::
-  (MonadError e m, MonadIO m, e ~ Text) =>
+  (MonadIO m) =>
   -- | The target path in the wallet dir.
   Turtle.FilePath ->
   -- | The path to the PDF.
@@ -114,7 +114,7 @@ parseAndMoveBcgeCcPdfStatement = do
     (match (compile "bcgecc*.txt") (Turtle.encodeString file))
 
 textifyAndMoveCoopPdfReceipt ::
-  (MonadError e m, MonadIO m, e ~ Text) =>
+  (MonadIO m) =>
   -- | The path to the PDF receipt.
   Turtle.FilePath ->
   m ()

@@ -5,9 +5,9 @@ module PdfToText (
   PdfToTextOutputMode (..),
 ) where
 
+import Control.Exception.Extra (failIO)
 import Control.Foldl.ByteString (ByteString)
-import Control.Monad.Except (MonadError (throwError))
-import Control.Monad.IO.Class (MonadIO (liftIO))
+import Control.Monad.IO.Class (MonadIO)
 import Data.Either.Extra (fromEither)
 import Data.Text (Text)
 import Data.Text.Encoding (decodeUtf8)
@@ -25,7 +25,7 @@ data PdfToTextOutputMode outputType where
 --
 -- https://en.wikipedia.org/wiki/Pdftotext
 pdftotext ::
-  (MonadError e m, MonadIO m, e ~ Text) =>
+  (MonadIO m) =>
   PdfToTextMode ->
   -- | Input PDF path
   Turtle.FilePath ->
@@ -38,13 +38,12 @@ pdftotext mode pdfFile outputMode = do
         Raw -> "-raw"
         Layout -> "-layout"
   (exitCode, stdout', stderr') <-
-    liftIO $
-      Turtle.Bytes.procStrictWithErr
-        "pdftotext"
-        [modeArg, fpToText pdfFile, outputModeToArgument outputMode]
-        mempty
+    Turtle.Bytes.procStrictWithErr
+      "pdftotext"
+      [modeArg, fpToText pdfFile, outputModeToArgument outputMode]
+      mempty
   case exitCode of
-    ExitFailure _ -> throwError $ "pdftotext has failed.\n" <> decodeUtf8 stderr'
+    ExitFailure _ -> failIO $ "pdftotext has failed.\n" <> decodeUtf8 stderr'
     ExitSuccess -> return $ outputModeToReturnType outputMode stdout'
  where
   fpToText :: Turtle.FilePath -> Text
