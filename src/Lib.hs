@@ -25,7 +25,7 @@ import FindataTranscoder (
   FindataTranscoderSource (..),
   findataTranscoder,
  )
-import PdfToText (PdfToTextMode (..), pdftotext)
+import PdfToText (PdfToTextMode (..), PdfToTextOutputMode (PttOutputModeFilePath), pdftotext)
 import System.FilePath.Glob (compile, match)
 import System.IO (stderr)
 import System.IO.Error (isUserError)
@@ -90,7 +90,7 @@ textifyAndMovePdf ::
 textifyAndMovePdf subdir pdf = do
   walletDir <- getWalletDir
   let txtFile = walletDir </> subdir </> (pdf <.> "txt")
-  pdftotext Raw pdf txtFile
+  pdftotext Raw pdf (PttOutputModeFilePath txtFile)
   rm pdf
 
 textifyAndMoveBcgeCcPdfStatement :: Shell ExitCode
@@ -175,7 +175,7 @@ moveGPayslipToWallet wallet pdf = flip catchError prependContext $ do
   transcode pdf' = do
     maybeContent <- liftIO . unsafeRunManaged $ do
       tmpTxt <- Turtle.mktempfile (Turtle.decodeString "/tmp") ""
-      maybeSuccess :: (Either Text ()) <- runExceptT $ pdftotext Layout pdf' tmpTxt
+      maybeSuccess :: (Either Text ()) <- runExceptT $ pdftotext Layout pdf' (PttOutputModeFilePath tmpTxt)
       liftIO $
         sequence $
           T.readFile (Turtle.encodeString tmpTxt) <$ maybeSuccess
