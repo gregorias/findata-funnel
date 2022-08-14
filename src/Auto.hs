@@ -1,7 +1,12 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 
-module Lib (
-  main,
+-- | This module contains fully-automatic dataflows.
+--
+-- A fully-automatic dataflow is one that is triggerred by an external event
+-- and can be completed without my involvement. Usually these are tasks that
+-- don't require my input to solve a 2FA challenge.
+module Auto (
+  pullAuto,
   -- | Exports of individual handlers for testing purposes.
   moveGPayslipToWallet,
 ) where
@@ -211,8 +216,9 @@ moveUberEatsBills = do
     (reportErrors ("Moving " <> fpToText file) $ void (moveUberEatsBill file >> rm file))
     (match (compile "*.ubereats") (Turtle.encodeString file))
 
-main :: IO ()
-main = do
+-- | Pulls data fully automatically.
+pullAuto :: IO ()
+pullAuto = do
   fetchingExitCodes :: [ExitCode] <-
     parallel $
       fmap

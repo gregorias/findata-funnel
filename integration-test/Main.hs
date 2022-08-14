@@ -8,6 +8,7 @@
 -- installed in the system.
 module Main (main) where
 
+import Auto (moveGPayslipToWallet)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Managed (Managed, with)
@@ -16,7 +17,6 @@ import Data.Either (isRight)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-import Lib (moveGPayslipToWallet)
 import Test.Hspec (
   Spec,
   describe,

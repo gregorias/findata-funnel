@@ -1,6 +1,7 @@
 -- | A collection of commands to run an e2e update for a specific source.
 module CLI (individualPipesP) where
 
+import Auto (pullAuto)
 import Bcge (pullBcge)
 import Control.Funnel (fetchTranscodeAppend)
 import Control.Monad.Cont (MonadIO, liftIO)
@@ -70,6 +71,10 @@ individualPipesP =
   subparser
     ( mconcat
         [ pullCommand
+            "auto"
+            ("Pulls financial data from sources that don't require my involvement.\n" <> "Currently this entails: Coop, EasyRide, Galaxus, Patreon, Uber Eats receipts, and Revolut statements sent to gMail.\n")
+            pullAuto
+        , pullCommand
             "bcge"
             "Pulls BCGE statement data from Internet and saves it in a Ledger file in the wallet directory."
             pullBcge
