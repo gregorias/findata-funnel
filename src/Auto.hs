@@ -224,7 +224,7 @@ pullAuto = do
       fmap
         ( \(sourceName, ffSource) ->
             reportExceptions ("Fetching " <> sourceName) $
-              void (FF.runFindataFetcher ffSource)
+              FF.runFindataFetcher ffSource
         )
         [ ("Coop receipts", FF.FFSourceCoopSupercard)
         , ("EasyRide receipts", FF.FFSourceEasyRide)

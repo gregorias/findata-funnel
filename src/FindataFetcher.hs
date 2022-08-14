@@ -17,15 +17,15 @@ import qualified Turtle.Bytes as TurtleB
 data FindataFetcherSource outputType where
   FFSourceBcge :: FindataFetcherSource Text
   FFSourceBcgeCc :: FindataFetcherSource ByteString
-  FFSourceCoopSupercard :: FindataFetcherSource Text
+  FFSourceCoopSupercard :: FindataFetcherSource ()
   FFSourceDegiroPortfolio :: FindataFetcherSource Text
-  FFSourceEasyRide :: FindataFetcherSource Text
+  FFSourceEasyRide :: FindataFetcherSource ()
   FFSourceFinpensionPortfolioTotal :: FindataFetcherSource Text
-  FFSourceGalaxus :: FindataFetcherSource Text
-  FFSourcePatreon :: FindataFetcherSource Text
-  FFSourceRevolutMail :: FindataFetcherSource Text
+  FFSourceGalaxus :: FindataFetcherSource ()
+  FFSourcePatreon :: FindataFetcherSource ()
+  FFSourceRevolutMail :: FindataFetcherSource ()
   FFSourceSplitwise :: FindataFetcherSource Text
-  FFSourceUberEats :: FindataFetcherSource Text
+  FFSourceUberEats :: FindataFetcherSource ()
 
 findataFetcherSourceToCommand :: FindataFetcherSource a -> Text
 findataFetcherSourceToCommand FFSourceBcge = "pull-bcge"
@@ -43,15 +43,15 @@ findataFetcherSourceToCommand FFSourceUberEats = "pull-uber-eats"
 convertTextToOutputType :: FindataFetcherSource outputType -> ByteString -> outputType
 convertTextToOutputType FFSourceBcge = decodeUtf8
 convertTextToOutputType FFSourceBcgeCc = id
-convertTextToOutputType FFSourceCoopSupercard = decodeUtf8
+convertTextToOutputType FFSourceCoopSupercard = const ()
 convertTextToOutputType FFSourceDegiroPortfolio = decodeUtf8
-convertTextToOutputType FFSourceEasyRide = decodeUtf8
+convertTextToOutputType FFSourceEasyRide = const ()
 convertTextToOutputType FFSourceFinpensionPortfolioTotal = decodeUtf8
-convertTextToOutputType FFSourceGalaxus = decodeUtf8
-convertTextToOutputType FFSourcePatreon = decodeUtf8
-convertTextToOutputType FFSourceRevolutMail = decodeUtf8
+convertTextToOutputType FFSourceGalaxus = const ()
+convertTextToOutputType FFSourcePatreon = const ()
+convertTextToOutputType FFSourceRevolutMail = const ()
 convertTextToOutputType FFSourceSplitwise = decodeUtf8
-convertTextToOutputType FFSourceUberEats = decodeUtf8
+convertTextToOutputType FFSourceUberEats = const ()
 
 -- | Runs findata-fetcher
 runFindataFetcher ::
