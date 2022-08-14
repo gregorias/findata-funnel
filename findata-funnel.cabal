@@ -47,6 +47,7 @@ library
       Glob
     , base >=4.13 && <5
     , bytestring
+    , either
     , extra
     , foldl
     , managed

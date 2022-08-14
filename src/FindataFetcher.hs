@@ -54,6 +54,8 @@ convertTextToOutputType FFSourceSplitwise = decodeUtf8
 convertTextToOutputType FFSourceUberEats = const ()
 
 -- | Runs findata-fetcher
+--
+-- Throws IOException on error.
 runFindataFetcher ::
   (MonadIO m) =>
   FindataFetcherSource outputType ->

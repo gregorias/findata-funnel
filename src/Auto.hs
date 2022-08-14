@@ -12,7 +12,7 @@ module Auto (
 ) where
 
 import Control.Concurrent.ParallelIO.Global (parallel)
-import Control.Exception (tryJust)
+import Control.Exception (IOException, catch, throwIO, try, tryJust)
 import qualified Control.Foldl as Foldl
 import Control.Monad (void, when)
 import Control.Monad.Except (ExceptT, MonadError (catchError, throwError), runExceptT)
@@ -20,19 +20,25 @@ import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Managed (MonadManaged)
 import qualified Control.Monad.Managed as Managed
 import Data.Bool (bool)
+import Data.Either (isRight)
+import Data.Either.Combinators (leftToMaybe)
 import Data.Either.Extra (fromEither)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Text.IO (hPutStr)
 import qualified Data.Text.IO as T
 import qualified FindataFetcher as FF
 import FindataTranscoder (
   FindataTranscoderSource (..),
   findataTranscoder,
  )
-import PdfToText (PdfToTextInputMode (PttInputModeFilePath), PdfToTextMode (..), PdfToTextOutputMode (PttOutputModeFilePath), pdftotext)
+import PdfToText (
+  PdfToTextInputMode (PttInputModeFilePath),
+  PdfToTextMode (..),
+  PdfToTextOutputMode (PttOutputModeFilePath),
+  pdftotext,
+ )
 import System.FilePath.Glob (compile, match)
-import System.IO (stderr)
+import System.IO (hPutStr, hPutStrLn, stderr)
 import System.IO.Error (isUserError)
 import Turtle (
   ExitCode (ExitFailure, ExitSuccess),
@@ -63,7 +69,7 @@ reportErrors :: (MonadIO io) => Text -> ExceptT Text io () -> io ExitCode
 reportErrors name action = do
   eitherErrorOrValue <- runExceptT action
   either
-    (\e -> liftIO $ hPutStr stderr (name <> " has failed.\n" <> e) >> return (ExitFailure 1))
+    (\e -> liftIO $ T.hPutStr stderr (name <> " has failed.\n" <> e) >> return (ExitFailure 1))
     (const $ return ExitSuccess)
     eitherErrorOrValue
 
@@ -71,7 +77,7 @@ reportExceptions :: (MonadIO io) => Text -> IO () -> io ExitCode
 reportExceptions name action = do
   (result :: Either _ _) <- liftIO $ tryJust (\e -> if isUserError e then Just e else Nothing) action
   either
-    (\e -> liftIO $ hPutStr stderr (name <> " has failed.\n" <> T.pack (show e)) >> return (ExitFailure 1))
+    (\e -> liftIO $ T.hPutStr stderr (name <> " has failed.\n" <> T.pack (show e)) >> return (ExitFailure 1))
     (const $ return ExitSuccess)
     result
 
@@ -85,34 +91,27 @@ forFileInDls globStr action = do
     then reportErrors ("Processing " <> fpToText file) $ action file
     else return ExitSuccess
 
-textifyAndMovePdf ::
+printIOExceptionOnStderr :: String -> IO a -> IO a
+printIOExceptionOnStderr name action =
+  catch
+    action
+    ( \(ioe :: IOException) -> do
+        hPutStrLn stderr $ "Could not execute " <> name
+        hPutStr stderr (show ioe)
+        throwIO ioe
+    )
+
+textifyPdf ::
   (MonadIO m) =>
   -- | The target path in the wallet dir.
   Turtle.FilePath ->
   -- | The path to the PDF.
   Turtle.FilePath ->
   m ()
-textifyAndMovePdf subdir pdf = do
+textifyPdf subdir pdf = do
   walletDir <- getWalletDir
   let txtFile = walletDir </> subdir </> (pdf <.> "txt")
   pdftotext Raw (PttInputModeFilePath pdf) (PttOutputModeFilePath txtFile)
-  rm pdf
-
-textifyAndMoveCoopPdfReceipt ::
-  (MonadIO m) =>
-  -- | The path to the PDF receipt.
-  Turtle.FilePath ->
-  m ()
-textifyAndMoveCoopPdfReceipt = textifyAndMovePdf "updates/coop-receipts"
-
-parseAndMoveCoopPdfReceipts :: Shell ExitCode
-parseAndMoveCoopPdfReceipts = do
-  cdDownloads
-  file <- ls $ Turtle.fromText "."
-  bool
-    (return ExitSuccess)
-    (reportErrors ("Textifying " <> fpToText file) $ textifyAndMoveCoopPdfReceipt file)
-    (match (compile "Coop *.pdf") (Turtle.encodeString file))
 
 parseAndMoveStatement ::
   (MonadIO m) =>
@@ -216,9 +215,29 @@ moveUberEatsBills = do
     (reportErrors ("Moving " <> fpToText file) $ void (moveUberEatsBill file >> rm file))
     (match (compile "*.ubereats") (Turtle.encodeString file))
 
+-- | Pulls coop receipts to the wallet.
+--
+-- Throws an IO exception on failure.
+pullCoopReceipts :: IO ()
+pullCoopReceipts = do
+  -- The coop fetcher often fails, so let's not block textification if that happens.
+  ioException :: (Maybe IOException) <-
+    fmap leftToMaybe . try @IOException $ FF.runFindataFetcher FF.FFSourceCoopSupercard
+  textifyCoopPdfReceipts
+  maybe (return ()) throwIO ioException
+ where
+  textifyCoopPdfReceipts :: IO ()
+  textifyCoopPdfReceipts = Turtle.reduce Foldl.mconcat $ do
+    cdDownloads
+    file <- ls $ Turtle.fromText "."
+    pdf <- bool Turtle.empty (return file) (match (compile "Coop *.pdf") (Turtle.encodeString file))
+    textifyPdf "updates/coop-receipts" pdf
+    rm pdf
+
 -- | Pulls data fully automatically.
 pullAuto :: IO ()
 pullAuto = do
+  isCoopSuccess <- isIOSuccessful $ printIOExceptionOnStderr "Coop pull" pullCoopReceipts
   fetchingExitCodes :: [ExitCode] <-
     parallel $
       fmap
@@ -226,14 +245,12 @@ pullAuto = do
             reportExceptions ("Fetching " <> sourceName) $
               FF.runFindataFetcher ffSource
         )
-        [ ("Coop receipts", FF.FFSourceCoopSupercard)
-        , ("EasyRide receipts", FF.FFSourceEasyRide)
+        [ ("EasyRide receipts", FF.FFSourceEasyRide)
         , ("Galaxus receipts", FF.FFSourceGalaxus)
         , ("Patreon receipts", FF.FFSourcePatreon)
         , ("Revolut statements", FF.FFSourceRevolutMail)
         , ("Uber Eats bills", FF.FFSourceUberEats)
         ]
-  anyCoopParseAndMoveFailure <- Turtle.fold parseAndMoveCoopPdfReceipts (Foldl.any isExitFailure)
   anyGalaxusFailure <- Turtle.fold moveGalaxusReceipts (Foldl.any isExitFailure)
   wallet <- getWallet
   anyGPayslipFailure <-
@@ -245,14 +262,16 @@ pullAuto = do
   anyUberEatsFailure <- Turtle.fold moveUberEatsBills (Foldl.any isExitFailure)
   when
     ( any isExitFailure fetchingExitCodes
-        || anyCoopParseAndMoveFailure
         || anyGalaxusFailure
         || anyGPayslipFailure
         || anyPatreonParseAndMoveFailure
         || anyRevolutParseAndMoveFailure
         || anyUberEatsFailure
+        || not isCoopSuccess
     )
     (exit (ExitFailure 1))
  where
   isExitFailure ExitSuccess = False
   isExitFailure (ExitFailure _) = True
+  isIOSuccessful :: IO () -> IO Bool
+  isIOSuccessful = fmap isRight . try @IOException
