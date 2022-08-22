@@ -60,10 +60,13 @@ import Wallet (appendTransactionToWallet, getWallet, getWalletDir)
 fpToText :: Turtle.FilePath -> Text
 fpToText = fromEither . Turtle.toText
 
-cdDownloads :: (MonadIO io) => io ()
-cdDownloads = do
+downloads :: (MonadIO io) => io Turtle.FilePath
+downloads = do
   homeDir <- home
-  cd $ homeDir </> Turtle.fromText "Downloads"
+  return $ homeDir </> Turtle.fromText "Downloads"
+
+cdDownloads :: (MonadIO io) => io ()
+cdDownloads = downloads >>= cd
 
 reportErrors :: (MonadIO io) => Text -> ExceptT Text io () -> io ExitCode
 reportErrors name action = do
@@ -112,6 +115,22 @@ textifyPdf subdir pdf = do
   walletDir <- getWalletDir
   let txtFile = walletDir </> subdir </> (pdf <.> "txt")
   pdftotext Raw (PttInputModeFilePath pdf) (PttOutputModeFilePath txtFile)
+
+-- | Parses all text statements in a directory, appends them to a wallet, and deletes the source.
+parseTextStatements ::
+  -- | Source directory
+  Turtle.FilePath ->
+  -- | Statement filename glob pattern
+  String ->
+  FindataTranscoderSource ->
+  IO ()
+parseTextStatements sourceDir stmtGlobPattern ftSource = Turtle.reduce Foldl.mconcat $ do
+  file <- ls sourceDir
+  stmt <- bool Turtle.empty (return file) (match (compile stmtGlobPattern) (Turtle.encodeString file))
+  transaction :: Text <- findataTranscoder ftSource (Turtle.input stmt)
+  wallet <- getWallet
+  appendTransactionToWallet wallet (Turtle.select $ Turtle.textToPosixLines transaction)
+  rm stmt
 
 parseAndAppendStatement :: (MonadManaged m) => FindataTranscoderSource -> Turtle.FilePath -> m ()
 parseAndAppendStatement findataTranscoderSource stmt = do
@@ -198,17 +217,8 @@ pullEasyRideReceipts = do
 pullGalaxusReceipts :: IO ()
 pullGalaxusReceipts = do
   FF.runFindataFetcher FF.FFSourceGalaxus
-  moveGalaxusReceipts
- where
-  moveGalaxusReceipts :: IO ()
-  moveGalaxusReceipts = Turtle.reduce Foldl.mconcat $ do
-    cdDownloads
-    file <- ls $ Turtle.fromText "."
-    receipt <- bool Turtle.empty (return file) (match (compile "*.galaxus") (Turtle.encodeString file))
-    transaction :: Text <- findataTranscoder FindataTranscoderGalaxus (Turtle.input receipt)
-    wallet <- getWallet
-    appendTransactionToWallet wallet (Turtle.select $ Turtle.textToPosixLines transaction)
-    rm receipt
+  downloadsDir :: Turtle.FilePath <- downloads
+  parseTextStatements downloadsDir "*.galaxus" FindataTranscoderGalaxus
 
 -- | Pulls Patreon receipts to the wallet.
 --
@@ -216,17 +226,8 @@ pullGalaxusReceipts = do
 pullPatreonReceipts :: IO ()
 pullPatreonReceipts = do
   FF.runFindataFetcher FF.FFSourcePatreon
-  movePatreonReceipts
- where
-  movePatreonReceipts :: IO ()
-  movePatreonReceipts = Turtle.reduce Foldl.mconcat $ do
-    cdDownloads
-    file <- ls $ Turtle.fromText "."
-    receipt <- bool Turtle.empty (return file) (match (compile "patreon_*.txt") (Turtle.encodeString file))
-    transaction :: Text <- findataTranscoder FindataTranscoderPatreon (Turtle.input receipt)
-    wallet <- getWallet
-    appendTransactionToWallet wallet (Turtle.select $ Turtle.textToPosixLines transaction)
-    rm receipt
+  downloadsDir :: Turtle.FilePath <- downloads
+  parseTextStatements downloadsDir "patreon_*.txt" FindataTranscoderPatreon
 
 -- | Pulls Revolut receipts to the wallet.
 --
@@ -234,17 +235,8 @@ pullPatreonReceipts = do
 pullRevolutReceipts :: IO ()
 pullRevolutReceipts = do
   FF.runFindataFetcher FF.FFSourceRevolutMail
-  moveRevolutReceipts
- where
-  moveRevolutReceipts :: IO ()
-  moveRevolutReceipts = Turtle.reduce Foldl.mconcat $ do
-    cdDownloads
-    file <- ls $ Turtle.fromText "."
-    receipt <- bool Turtle.empty (return file) (match (compile "revolut-account-statement*.csv") (Turtle.encodeString file))
-    transaction :: Text <- findataTranscoder FindataTranscoderRevolut (Turtle.input receipt)
-    wallet <- getWallet
-    appendTransactionToWallet wallet (Turtle.select $ Turtle.textToPosixLines transaction)
-    rm receipt
+  downloadsDir :: Turtle.FilePath <- downloads
+  parseTextStatements downloadsDir "revolut-account-statement*.csv" FindataTranscoderRevolut
 
 -- | Pulls data fully automatically.
 pullAuto :: IO ()
