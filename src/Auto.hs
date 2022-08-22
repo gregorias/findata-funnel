@@ -12,19 +12,17 @@ module Auto (
 ) where
 
 import Control.Concurrent.ParallelIO.Global (parallel)
-import Control.Exception (IOException, catch, throwIO, try, tryJust)
+import Control.Exception (IOException, catch, throwIO, try)
 import qualified Control.Foldl as Foldl
-import Control.Monad (void, when)
+import Control.Monad (when)
 import Control.Monad.Except (ExceptT, MonadError (catchError, throwError), runExceptT)
 import Control.Monad.IO.Class (MonadIO (liftIO))
-import Control.Monad.Managed (MonadManaged)
 import qualified Control.Monad.Managed as Managed
 import Data.Bool (bool)
 import Data.Either (isRight)
 import Data.Either.Combinators (leftToMaybe)
 import Data.Either.Extra (fromEither)
 import Data.Text (Text)
-import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified FindataFetcher as FF
 import FindataTranscoder (
@@ -39,7 +37,6 @@ import PdfToText (
  )
 import System.FilePath.Glob (compile, match)
 import System.IO (hPutStr, hPutStrLn, stderr)
-import System.IO.Error (isUserError)
 import Turtle (
   ExitCode (ExitFailure, ExitSuccess),
   Line,
@@ -75,14 +72,6 @@ reportErrors name action = do
     (\e -> liftIO $ T.hPutStr stderr (name <> " has failed.\n" <> e) >> return (ExitFailure 1))
     (const $ return ExitSuccess)
     eitherErrorOrValue
-
-reportExceptions :: (MonadIO io) => Text -> IO () -> io ExitCode
-reportExceptions name action = do
-  (result :: Either _ _) <- liftIO $ tryJust (\e -> if isUserError e then Just e else Nothing) action
-  either
-    (\e -> liftIO $ T.hPutStr stderr (name <> " has failed.\n" <> T.pack (show e)) >> return (ExitFailure 1))
-    (const $ return ExitSuccess)
-    result
 
 -- | Runs the action for each matching file in '~/Downloads'.
 forFileInDls :: String -> (Turtle.FilePath -> ExceptT Text Shell ()) -> Shell ExitCode
@@ -126,17 +115,11 @@ parseTextStatements ::
   IO ()
 parseTextStatements sourceDir stmtGlobPattern ftSource = Turtle.reduce Foldl.mconcat $ do
   file <- ls sourceDir
-  stmt <- bool Turtle.empty (return file) (match (compile stmtGlobPattern) (Turtle.encodeString file))
+  stmt <- bool Turtle.empty (return file) (match (compile stmtGlobPattern) (Turtle.encodeString $ Turtle.filename file))
   transaction :: Text <- findataTranscoder ftSource (Turtle.input stmt)
   wallet <- getWallet
   appendTransactionToWallet wallet (Turtle.select $ Turtle.textToPosixLines transaction)
   rm stmt
-
-parseAndAppendStatement :: (MonadManaged m) => FindataTranscoderSource -> Turtle.FilePath -> m ()
-parseAndAppendStatement findataTranscoderSource stmt = do
-  stmtTxt <- findataTranscoder findataTranscoderSource (Turtle.input stmt)
-  wallet <- getWallet
-  appendTransactionToWallet wallet (Turtle.select $ Turtle.textToPosixLines stmtTxt)
 
 -- | Moves Google Payslip PDF to the main wallet file.
 moveGPayslipToWallet ::
@@ -172,18 +155,6 @@ moveGPayslipToWallet wallet pdf = flip catchError prependContext $ do
         sequence $
           T.readFile (Turtle.encodeString tmpTxt) <$ maybeSuccess
     either throwError return maybeContent
-
-moveUberEatsBill :: (MonadManaged m) => Turtle.FilePath -> m ()
-moveUberEatsBill = parseAndAppendStatement FindataTranscoderUberEats
-
-moveUberEatsBills :: Shell ExitCode
-moveUberEatsBills = do
-  cdDownloads
-  file <- ls $ Turtle.fromText "."
-  bool
-    (return ExitSuccess)
-    (reportErrors ("Moving " <> fpToText file) $ void (moveUberEatsBill file >> rm file))
-    (match (compile "*.ubereats") (Turtle.encodeString file))
 
 -- | Pulls coop receipts to the wallet.
 --
@@ -238,6 +209,15 @@ pullRevolutReceipts = do
   downloadsDir :: Turtle.FilePath <- downloads
   parseTextStatements downloadsDir "revolut-account-statement*.csv" FindataTranscoderRevolut
 
+-- | Pulls Uber Eats receipts to the wallet.
+--
+-- Throws an IO exception on failure.
+pullUberEatsReceipts :: IO ()
+pullUberEatsReceipts = do
+  FF.runFindataFetcher FF.FFSourceUberEats
+  downloadsDir :: Turtle.FilePath <- downloads
+  parseTextStatements downloadsDir "*.ubereats" FindataTranscoderUberEats
+
 -- | Pulls data fully automatically.
 pullAuto :: IO ()
 pullAuto = do
@@ -249,28 +229,15 @@ pullAuto = do
             , ("Galaxus pull", pullGalaxusReceipts)
             , ("Patreon pull", pullPatreonReceipts)
             , ("Revolut pull", pullRevolutReceipts)
+            , ("Uber Eats pull", pullUberEatsReceipts)
             ]
-  fetchingExitCodes :: [ExitCode] <-
-    parallel $
-      fmap
-        ( \(sourceName, ffSource) ->
-            reportExceptions ("Fetching " <> sourceName) $
-              FF.runFindataFetcher ffSource
-        )
-        [ ("Uber Eats bills", FF.FFSourceUberEats)
-        ]
   wallet <- getWallet
   anyGPayslipFailure <-
     Turtle.fold
       (forFileInDls "gpayslip*.pdf" (moveGPayslipToWallet wallet))
       (Foldl.any isExitFailure)
-  anyUberEatsFailure <- Turtle.fold moveUberEatsBills (Foldl.any isExitFailure)
   when
-    ( any isExitFailure fetchingExitCodes
-        || anyGPayslipFailure
-        || anyUberEatsFailure
-        || elem False pullSuccesses
-    )
+    (anyGPayslipFailure || elem False pullSuccesses)
     (exit (ExitFailure 1))
  where
   isExitFailure ExitSuccess = False
