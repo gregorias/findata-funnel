@@ -191,18 +191,6 @@ parseAndMoveRevolutCsvStatements = do
     (reportErrors ("Parsing " <> fpToText file) $ parseAndMoveRevolutCsvStatement file)
     (match (compile "revolut-account-statement*.csv") (Turtle.encodeString file))
 
-moveGalaxusReceipts :: Shell ExitCode
-moveGalaxusReceipts = do
-  cdDownloads
-  file <- ls $ Turtle.fromText "."
-  bool
-    (return ExitSuccess)
-    (reportErrors ("Moving " <> fpToText file) $ void (moveGalaxusBill file >> rm file))
-    (match (compile "*.galaxus") (Turtle.encodeString file))
- where
-  moveGalaxusBill :: (MonadManaged m) => Turtle.FilePath -> m ()
-  moveGalaxusBill = parseAndAppendStatement FindataTranscoderGalaxus
-
 moveUberEatsBill :: (MonadManaged m) => Turtle.FilePath -> m ()
 moveUberEatsBill = parseAndAppendStatement FindataTranscoderUberEats
 
@@ -234,10 +222,42 @@ pullCoopReceipts = do
     textifyPdf "updates/coop-receipts" pdf
     rm pdf
 
+-- | Pulls EasyRide receipts to the wallet.
+--
+-- Throws an IO exception on failure.
+pullEasyRideReceipts :: IO ()
+pullEasyRideReceipts = do
+  FF.runFindataFetcher FF.FFSourceEasyRide
+
+-- | Pulls Galaxus receipts to the wallet.
+--
+-- Throws an IO exception on failure.
+pullGalaxusReceipts :: IO ()
+pullGalaxusReceipts = do
+  FF.runFindataFetcher FF.FFSourceGalaxus
+  moveGalaxusReceipts
+ where
+  moveGalaxusReceipts :: IO ()
+  moveGalaxusReceipts = Turtle.reduce Foldl.mconcat $ do
+    cdDownloads
+    file <- ls $ Turtle.fromText "."
+    receipt <- bool Turtle.empty (return file) (match (compile "*.galaxus") (Turtle.encodeString file))
+    transaction :: Text <- findataTranscoder FindataTranscoderGalaxus (Turtle.input receipt)
+    wallet <- getWallet
+    appendTransactionToWallet wallet (Turtle.select $ Turtle.textToPosixLines transaction)
+    rm receipt
+
 -- | Pulls data fully automatically.
 pullAuto :: IO ()
 pullAuto = do
-  isCoopSuccess <- isIOSuccessful $ printIOExceptionOnStderr "Coop pull" pullCoopReceipts
+  pullSuccesses :: [Bool] <-
+    parallel $
+      fmap
+        isIOSuccessful
+        [ printIOExceptionOnStderr "Coop pull" pullCoopReceipts
+        , printIOExceptionOnStderr "EasyRide pull" pullEasyRideReceipts
+        , printIOExceptionOnStderr "Galaxus pull" pullGalaxusReceipts
+        ]
   fetchingExitCodes :: [ExitCode] <-
     parallel $
       fmap
@@ -245,13 +265,10 @@ pullAuto = do
             reportExceptions ("Fetching " <> sourceName) $
               FF.runFindataFetcher ffSource
         )
-        [ ("EasyRide receipts", FF.FFSourceEasyRide)
-        , ("Galaxus receipts", FF.FFSourceGalaxus)
-        , ("Patreon receipts", FF.FFSourcePatreon)
+        [ ("Patreon receipts", FF.FFSourcePatreon)
         , ("Revolut statements", FF.FFSourceRevolutMail)
         , ("Uber Eats bills", FF.FFSourceUberEats)
         ]
-  anyGalaxusFailure <- Turtle.fold moveGalaxusReceipts (Foldl.any isExitFailure)
   wallet <- getWallet
   anyGPayslipFailure <-
     Turtle.fold
@@ -262,12 +279,11 @@ pullAuto = do
   anyUberEatsFailure <- Turtle.fold moveUberEatsBills (Foldl.any isExitFailure)
   when
     ( any isExitFailure fetchingExitCodes
-        || anyGalaxusFailure
         || anyGPayslipFailure
         || anyPatreonParseAndMoveFailure
         || anyRevolutParseAndMoveFailure
         || anyUberEatsFailure
-        || not isCoopSuccess
+        || elem False pullSuccesses
     )
     (exit (ExitFailure 1))
  where
