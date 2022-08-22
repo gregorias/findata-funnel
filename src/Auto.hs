@@ -113,19 +113,6 @@ textifyPdf subdir pdf = do
   let txtFile = walletDir </> subdir </> (pdf <.> "txt")
   pdftotext Raw (PttInputModeFilePath pdf) (PttOutputModeFilePath txtFile)
 
-parseAndMoveStatement ::
-  (MonadIO m) =>
-  FindataTranscoderSource ->
-  Turtle.FilePath ->
-  m Turtle.FilePath
-parseAndMoveStatement findataTranscoderSource stmt = do
-  walletDir <- getWalletDir
-  ledgerOutput <- findataTranscoder findataTranscoderSource (Turtle.input stmt)
-  let stmtLedger = walletDir </> Turtle.fromText "updates" </> (stmt <.> "ledger")
-  Turtle.output stmtLedger (Turtle.select $ Turtle.textToLines ledgerOutput)
-  rm stmt
-  return stmtLedger
-
 parseAndAppendStatement :: (MonadManaged m) => FindataTranscoderSource -> Turtle.FilePath -> m ()
 parseAndAppendStatement findataTranscoderSource stmt = do
   stmtTxt <- findataTranscoder findataTranscoderSource (Turtle.input stmt)
@@ -166,18 +153,6 @@ moveGPayslipToWallet wallet pdf = flip catchError prependContext $ do
         sequence $
           T.readFile (Turtle.encodeString tmpTxt) <$ maybeSuccess
     either throwError return maybeContent
-
-parseAndMoveRevolutCsvStatement :: (MonadIO m) => Turtle.FilePath -> m ()
-parseAndMoveRevolutCsvStatement stmt = void $ parseAndMoveStatement FindataTranscoderRevolut stmt
-
-parseAndMoveRevolutCsvStatements :: Shell ExitCode
-parseAndMoveRevolutCsvStatements = do
-  cdDownloads
-  file <- ls $ Turtle.fromText "."
-  bool
-    (return ExitSuccess)
-    (reportErrors ("Parsing " <> fpToText file) $ parseAndMoveRevolutCsvStatement file)
-    (match (compile "revolut-account-statement*.csv") (Turtle.encodeString file))
 
 moveUberEatsBill :: (MonadManaged m) => Turtle.FilePath -> m ()
 moveUberEatsBill = parseAndAppendStatement FindataTranscoderUberEats
@@ -253,6 +228,24 @@ pullPatreonReceipts = do
     appendTransactionToWallet wallet (Turtle.select $ Turtle.textToPosixLines transaction)
     rm receipt
 
+-- | Pulls Revolut receipts to the wallet.
+--
+-- Throws an IO exception on failure.
+pullRevolutReceipts :: IO ()
+pullRevolutReceipts = do
+  FF.runFindataFetcher FF.FFSourceRevolutMail
+  moveRevolutReceipts
+ where
+  moveRevolutReceipts :: IO ()
+  moveRevolutReceipts = Turtle.reduce Foldl.mconcat $ do
+    cdDownloads
+    file <- ls $ Turtle.fromText "."
+    receipt <- bool Turtle.empty (return file) (match (compile "revolut-account-statement*.csv") (Turtle.encodeString file))
+    transaction :: Text <- findataTranscoder FindataTranscoderRevolut (Turtle.input receipt)
+    wallet <- getWallet
+    appendTransactionToWallet wallet (Turtle.select $ Turtle.textToPosixLines transaction)
+    rm receipt
+
 -- | Pulls data fully automatically.
 pullAuto :: IO ()
 pullAuto = do
@@ -263,6 +256,7 @@ pullAuto = do
             , ("EasyRide pull", pullEasyRideReceipts)
             , ("Galaxus pull", pullGalaxusReceipts)
             , ("Patreon pull", pullPatreonReceipts)
+            , ("Revolut pull", pullRevolutReceipts)
             ]
   fetchingExitCodes :: [ExitCode] <-
     parallel $
@@ -271,20 +265,17 @@ pullAuto = do
             reportExceptions ("Fetching " <> sourceName) $
               FF.runFindataFetcher ffSource
         )
-        [ ("Revolut statements", FF.FFSourceRevolutMail)
-        , ("Uber Eats bills", FF.FFSourceUberEats)
+        [ ("Uber Eats bills", FF.FFSourceUberEats)
         ]
   wallet <- getWallet
   anyGPayslipFailure <-
     Turtle.fold
       (forFileInDls "gpayslip*.pdf" (moveGPayslipToWallet wallet))
       (Foldl.any isExitFailure)
-  anyRevolutParseAndMoveFailure <- Turtle.fold parseAndMoveRevolutCsvStatements (Foldl.any isExitFailure)
   anyUberEatsFailure <- Turtle.fold moveUberEatsBills (Foldl.any isExitFailure)
   when
     ( any isExitFailure fetchingExitCodes
         || anyGPayslipFailure
-        || anyRevolutParseAndMoveFailure
         || anyUberEatsFailure
         || elem False pullSuccesses
     )
