@@ -15,13 +15,12 @@ import Control.Concurrent.ParallelIO.Global (parallel)
 import Control.Exception (IOException, catch, throwIO, try)
 import qualified Control.Foldl as Foldl
 import Control.Monad (when)
-import Control.Monad.Except (ExceptT, MonadError (catchError, throwError), runExceptT)
+import Control.Monad.Except (MonadError (catchError, throwError), runExceptT)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import qualified Control.Monad.Managed as Managed
 import Data.Bool (bool)
 import Data.Either (isRight)
 import Data.Either.Combinators (leftToMaybe)
-import Data.Either.Extra (fromEither)
 import Data.Text (Text)
 import qualified Data.Text.IO as T
 import qualified FindataFetcher as FF
@@ -32,13 +31,13 @@ import FindataTranscoder (
 import PdfToText (
   PdfToTextInputMode (PttInputModeFilePath),
   PdfToTextMode (..),
-  PdfToTextOutputMode (PttOutputModeFilePath),
+  PdfToTextOutputMode (PttOutputModeFilePath, PttOutputModeStdOut),
   pdftotext,
  )
 import System.FilePath.Glob (compile, match)
 import System.IO (hPutStr, hPutStrLn, stderr)
 import Turtle (
-  ExitCode (ExitFailure, ExitSuccess),
+  ExitCode (ExitFailure),
   Line,
   Shell,
   cd,
@@ -54,9 +53,6 @@ import Turtle.Extra (decodePathM, emptyLine)
 import qualified Turtle.Extra as Turtle
 import Wallet (appendTransactionToWallet, getWallet, getWalletDir)
 
-fpToText :: Turtle.FilePath -> Text
-fpToText = fromEither . Turtle.toText
-
 downloads :: (MonadIO io) => io Turtle.FilePath
 downloads = do
   homeDir <- home
@@ -64,24 +60,6 @@ downloads = do
 
 cdDownloads :: (MonadIO io) => io ()
 cdDownloads = downloads >>= cd
-
-reportErrors :: (MonadIO io) => Text -> ExceptT Text io () -> io ExitCode
-reportErrors name action = do
-  eitherErrorOrValue <- runExceptT action
-  either
-    (\e -> liftIO $ T.hPutStr stderr (name <> " has failed.\n" <> e) >> return (ExitFailure 1))
-    (const $ return ExitSuccess)
-    eitherErrorOrValue
-
--- | Runs the action for each matching file in '~/Downloads'.
-forFileInDls :: String -> (Turtle.FilePath -> ExceptT Text Shell ()) -> Shell ExitCode
-forFileInDls globStr action = do
-  cdDownloads
-  file :: Turtle.FilePath <- ls $ Turtle.fromText "."
-  let glob = compile globStr
-  if match glob (Turtle.encodeString file)
-    then reportErrors ("Processing " <> fpToText file) $ action file
-    else return ExitSuccess
 
 printIOExceptionOnStderr :: String -> IO a -> IO a
 printIOExceptionOnStderr name action =
@@ -191,6 +169,25 @@ pullGalaxusReceipts = do
   downloadsDir :: Turtle.FilePath <- downloads
   parseTextStatements downloadsDir "*.galaxus" FindataTranscoderGalaxus
 
+-- | Pulls Google Payslips to the wallet.
+--
+-- Throws an IO exception on failure.
+pullGooglePayslips :: IO ()
+pullGooglePayslips = do
+  homeDir <- home
+  let payslipSourceDir = homeDir </> Turtle.fromText "Google Drive/My Drive/Payslips"
+  let payslipTargetDir = homeDir </> Turtle.fromText "Documents/Job/Google/Payslips"
+  Turtle.reduce Foldl.mconcat $ do
+    payslipSource <- ls payslipSourceDir
+    let payslipTarget = payslipTargetDir </> Turtle.filename payslipSource
+    Turtle.mv payslipSource payslipTarget
+    payslipTxt <-
+      Turtle.select . Turtle.textToLines
+        <$> pdftotext Layout (PttInputModeFilePath payslipTarget) PttOutputModeStdOut
+    transaction <- findataTranscoder FindataTranscoderGPayslip payslipTxt
+    wallet <- getWallet
+    appendTransactionToWallet wallet (Turtle.select $ Turtle.textToPosixLines transaction)
+
 -- | Pulls Patreon receipts to the wallet.
 --
 -- Throws an IO exception on failure.
@@ -227,20 +224,12 @@ pullAuto = do
         <$> [ ("Coop pull", pullCoopReceipts)
             , ("EasyRide pull", pullEasyRideReceipts)
             , ("Galaxus pull", pullGalaxusReceipts)
+            , ("Google payslip pull", pullGooglePayslips)
             , ("Patreon pull", pullPatreonReceipts)
             , ("Revolut pull", pullRevolutReceipts)
             , ("Uber Eats pull", pullUberEatsReceipts)
             ]
-  wallet <- getWallet
-  anyGPayslipFailure <-
-    Turtle.fold
-      (forFileInDls "gpayslip*.pdf" (moveGPayslipToWallet wallet))
-      (Foldl.any isExitFailure)
-  when
-    (anyGPayslipFailure || elem False pullSuccesses)
-    (exit (ExitFailure 1))
+  when (False `elem` pullSuccesses) (exit (ExitFailure 1))
  where
-  isExitFailure ExitSuccess = False
-  isExitFailure (ExitFailure _) = True
   isIOSuccessful :: IO () -> IO Bool
   isIOSuccessful = fmap isRight . try @IOException
