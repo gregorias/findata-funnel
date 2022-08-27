@@ -22,6 +22,7 @@ data FindataFetcherSource outputType where
   FFSourceEasyRide :: FindataFetcherSource ()
   FFSourceFinpensionPortfolioTotal :: FindataFetcherSource Text
   FFSourceGalaxus :: FindataFetcherSource ()
+  FFSourceIB :: FindataFetcherSource Text
   FFSourcePatreon :: FindataFetcherSource ()
   FFSourceRevolutMail :: FindataFetcherSource ()
   FFSourceSplitwise :: FindataFetcherSource Text
@@ -35,6 +36,7 @@ findataFetcherSourceToCommand FFSourceDegiroPortfolio = "pull-degiro-portfolio"
 findataFetcherSourceToCommand FFSourceEasyRide = "pull-easyride-receipts"
 findataFetcherSourceToCommand FFSourceFinpensionPortfolioTotal = "pull-finpension-portfolio-total"
 findataFetcherSourceToCommand FFSourceGalaxus = "pull-galaxus"
+findataFetcherSourceToCommand FFSourceIB = "pull-ib"
 findataFetcherSourceToCommand FFSourcePatreon = "pull-patreon"
 findataFetcherSourceToCommand FFSourceRevolutMail = "pull-revolut-mail"
 findataFetcherSourceToCommand FFSourceSplitwise = "pull-splitwise"
@@ -48,6 +50,7 @@ convertTextToOutputType FFSourceDegiroPortfolio = decodeUtf8
 convertTextToOutputType FFSourceEasyRide = const ()
 convertTextToOutputType FFSourceFinpensionPortfolioTotal = decodeUtf8
 convertTextToOutputType FFSourceGalaxus = const ()
+convertTextToOutputType FFSourceIB = decodeUtf8
 convertTextToOutputType FFSourcePatreon = const ()
 convertTextToOutputType FFSourceRevolutMail = const ()
 convertTextToOutputType FFSourceSplitwise = decodeUtf8
