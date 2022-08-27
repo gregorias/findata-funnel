@@ -10,11 +10,11 @@ import Data.Text (Text)
 import qualified Data.Text.IO as T
 import Degiro (pullDegiroPortfolio)
 import FindataFetcher (
-  FindataFetcherSource (FFSourceBcgeCc, FFSourceFinpensionPortfolioTotal),
+  FindataFetcherSource (FFSourceBcgeCc, FFSourceFinpensionPortfolioTotal, FFSourceIB),
   runFindataFetcher,
  )
 import FindataTranscoder (
-  FindataTranscoderSource (FindataTranscoderBcgeCc, FindataTranscoderFinpensionPortfolioTotals),
+  FindataTranscoderSource (FindataTranscoderBcgeCc, FindataTranscoderFinpensionPortfolioTotals, FindataTranscoderIBActivity),
   findataTranscoder,
  )
 import Options.Applicative (
@@ -61,6 +61,15 @@ pullFinpension = do
       . Turtle.select
       . textToPosixLines
 
+pullIB :: (MonadIO m) => m ()
+pullIB = do
+  ibCsv :: Text <- runFindataFetcher FFSourceIB
+  ledger :: Text <-
+    findataTranscoder FindataTranscoderIBActivity $
+      posixLineToLine <$> textToShell ibCsv
+  walletDir <- getWalletDir
+  liftIO $ T.appendFile (encodeString $ walletDir </> "updates/ib.ledger") ledger
+
 pullSplitwiseFull :: IO ()
 pullSplitwiseFull = do
   wallet <- getWallet
@@ -72,7 +81,9 @@ individualPipesP =
     ( mconcat
         [ pullCommand
             "auto"
-            ("Pulls financial data from sources that don't require my involvement.\n" <> "Currently this entails: Coop, EasyRide, Galaxus, Patreon, Uber Eats receipts, and Revolut statements sent to gMail.\n")
+            ( "Pulls financial data from sources that don't require my involvement.\n"
+                <> "Currently this entails: Coop, EasyRide, Galaxus, Patreon, Uber Eats receipts, and Revolut statements sent to gMail.\n"
+            )
             pullAuto
         , pullCommand
             "bcge"
@@ -90,6 +101,10 @@ individualPipesP =
             "finpension"
             "Pulls Finpension portfolio status data from Internet and appends it to the wallet."
             pullFinpension
+        , pullCommand
+            "ib"
+            "Pulls Interactive Brokers data from Internet into a Ledger file in the wallet directory."
+            pullIB
         , pullCommand
             "splitwise"
             "Pulls Splitwise data from Internet and appends Splitwise status to the wallet."
