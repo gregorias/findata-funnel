@@ -14,7 +14,7 @@ import qualified Turtle.Extra as Turtle
 getWalletDir :: (MonadIO m) => m Turtle.FilePath
 getWalletDir = do
   homeDir <- home
-  return $ homeDir </> Turtle.fromText "Documents/Finance/Wallet"
+  return $ homeDir </> Turtle.fromText "Wallet"
 
 getWallet :: (MonadIO m) => m Turtle.FilePath
 getWallet = getWalletDir <&> (</> "wallet.txt")
