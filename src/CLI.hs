@@ -6,11 +6,13 @@ import Bcge (pullBcge)
 import Control.Funnel (fetchTranscodeAppend)
 import Control.Monad.Cont (MonadIO, liftIO)
 import Data.ByteString (ByteString)
+import Data.Either.Extra (fromEither)
 import Data.Text (Text)
 import qualified Data.Text.IO as T
 import Degiro (pullDegiroPortfolio)
 import FindataFetcher (
-  FindataFetcherSource (FFSourceBcgeCc, FFSourceFinpensionPortfolioTotal, FFSourceIB),
+  FindataFetcherCsParameters (FindataFetcherCsParameters),
+  FindataFetcherSource (FFSourceBcgeCc, FFSourceCs, FFSourceFinpensionPortfolioTotal, FFSourceIB),
   runFindataFetcher,
  )
 import FindataTranscoder (
@@ -28,7 +30,7 @@ import Options.Applicative (
  )
 import PdfToText (PdfToTextInputMode (PttInputModeStdIn), PdfToTextMode (Raw), PdfToTextOutputMode (PttOutputModeStdOut), pdftotext)
 import Splitwise (pullSplitwise)
-import Turtle (encodeString, select, (</>))
+import Turtle (encodeString, select, toText, (</>))
 import Turtle.Extra (posixLineToLine, textToPosixLines, textToShell)
 import Wallet (appendTransactionToWallet, getWallet, getWalletDir)
 
@@ -43,6 +45,12 @@ pullBcgeCc = do
   walletDir <- getWalletDir
   let bcgeCcLedger :: FilePath = encodeString $ walletDir </> "updates/bcge-cc.ledger"
   liftIO $ T.appendFile bcgeCcLedger ledger
+
+pullCS :: (MonadIO m) => m ()
+pullCS = do
+  walletDir <- getWalletDir
+  let csDownloadDir = walletDir </> "updates/charles-schwab-transaction-history"
+  runFindataFetcher (FFSourceCs (FindataFetcherCsParameters (fromEither $ toText csDownloadDir)))
 
 pullFinpension :: (MonadIO m) => m ()
 pullFinpension = do
@@ -93,6 +101,10 @@ individualPipesP =
             "bcge-cc"
             "Pulls BCGE credit card statement data from Internet and saves it in a Ledger file in the wallet directory."
             pullBcgeCc
+        , pullCommand
+            "cs"
+            "Pulls Charles Schwab's transaction history from Internet into a Ledger file in the wallet directory."
+            pullCS
         , pullCommand
             "degiro-portfolio"
             "Pulls Degiro portfolio status data from Internet and appends it to the wallet."
