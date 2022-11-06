@@ -12,6 +12,7 @@ import qualified Turtle
 data FindataTranscoderSource
   = FindataTranscoderBcge
   | FindataTranscoderBcgeCc
+  | FindataTranscoderCs
   | FindataTranscoderDegiroAccount
   | FindataTranscoderDegiroPortfolio
   | FindataTranscoderFinpensionPortfolioTotals
@@ -26,6 +27,7 @@ data FindataTranscoderSource
 findataTranscoderSourceToCommand :: FindataTranscoderSource -> Text
 findataTranscoderSourceToCommand FindataTranscoderBcge = "parse-bcge"
 findataTranscoderSourceToCommand FindataTranscoderBcgeCc = "parse-bcge-cc"
+findataTranscoderSourceToCommand FindataTranscoderCs = "parse-cs"
 findataTranscoderSourceToCommand FindataTranscoderDegiroAccount = "parse-degiro-account"
 findataTranscoderSourceToCommand FindataTranscoderDegiroPortfolio = "parse-degiro-portfolio"
 findataTranscoderSourceToCommand FindataTranscoderFinpensionPortfolioTotals = "parse-finpension-portfolio-total"
