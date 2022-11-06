@@ -1,6 +1,7 @@
 -- | This module handles using findata-fetcher.
 module FindataFetcher (
   FindataFetcherSource (..),
+  FindataFetcherCsParameters (..),
   runFindataFetcher,
 ) where
 
@@ -14,24 +15,30 @@ import Turtle (home, (</>))
 import qualified Turtle
 import qualified Turtle.Bytes as TurtleB
 
-data FindataFetcherSource outputType where
-  FFSourceBcge :: FindataFetcherSource Text
-  FFSourceBcgeCc :: FindataFetcherSource ByteString
-  FFSourceCoopSupercard :: FindataFetcherSource ()
-  FFSourceDegiroPortfolio :: FindataFetcherSource Text
-  FFSourceEasyRide :: FindataFetcherSource ()
-  FFSourceFinpensionPortfolioTotal :: FindataFetcherSource Text
-  FFSourceGalaxus :: FindataFetcherSource ()
-  FFSourceIB :: FindataFetcherSource Text
-  FFSourcePatreon :: FindataFetcherSource ()
-  FFSourceRevolutMail :: FindataFetcherSource ()
-  FFSourceSplitwise :: FindataFetcherSource Text
-  FFSourceUberEats :: FindataFetcherSource ()
+data FindataFetcherSource parameters output where
+  FFSourceBcge :: FindataFetcherSource () Text
+  FFSourceBcgeCc :: FindataFetcherSource () ByteString
+  FFSourceCoopSupercard :: FindataFetcherSource () ()
+  FFSourceCs :: FindataFetcherCsParameters -> FindataFetcherSource FindataFetcherCsParameters ()
+  FFSourceDegiroPortfolio :: FindataFetcherSource () Text
+  FFSourceEasyRide :: FindataFetcherSource () ()
+  FFSourceFinpensionPortfolioTotal :: FindataFetcherSource () Text
+  FFSourceGalaxus :: FindataFetcherSource () ()
+  FFSourceIB :: FindataFetcherSource () Text
+  FFSourcePatreon :: FindataFetcherSource () ()
+  FFSourceRevolutMail :: FindataFetcherSource () ()
+  FFSourceSplitwise :: FindataFetcherSource () Text
+  FFSourceUberEats :: FindataFetcherSource () ()
 
-findataFetcherSourceToCommand :: FindataFetcherSource a -> Text
+newtype FindataFetcherCsParameters = FindataFetcherCsParameters
+  { findataFetcherCsParametersDownloadDirectory :: Text
+  }
+
+findataFetcherSourceToCommand :: FindataFetcherSource a b -> Text
 findataFetcherSourceToCommand FFSourceBcge = "pull-bcge"
 findataFetcherSourceToCommand FFSourceBcgeCc = "pull-bcgecc"
 findataFetcherSourceToCommand FFSourceCoopSupercard = "pull-coop-supercard"
+findataFetcherSourceToCommand (FFSourceCs _) = "pull-cs-account-history"
 findataFetcherSourceToCommand FFSourceDegiroPortfolio = "pull-degiro-portfolio"
 findataFetcherSourceToCommand FFSourceEasyRide = "pull-easyride-receipts"
 findataFetcherSourceToCommand FFSourceFinpensionPortfolioTotal = "pull-finpension-portfolio-total"
@@ -42,10 +49,15 @@ findataFetcherSourceToCommand FFSourceRevolutMail = "pull-revolut-mail"
 findataFetcherSourceToCommand FFSourceSplitwise = "pull-splitwise"
 findataFetcherSourceToCommand FFSourceUberEats = "pull-uber-eats"
 
-convertTextToOutputType :: FindataFetcherSource outputType -> ByteString -> outputType
+sourceToParameters :: FindataFetcherSource a b -> [Text]
+sourceToParameters (FFSourceCs (FindataFetcherCsParameters{findataFetcherCsParametersDownloadDirectory = downloadDirectory})) = ["--download-directory=" <> downloadDirectory]
+sourceToParameters _ = []
+
+convertTextToOutputType :: FindataFetcherSource a output -> ByteString -> output
 convertTextToOutputType FFSourceBcge = decodeUtf8
 convertTextToOutputType FFSourceBcgeCc = id
 convertTextToOutputType FFSourceCoopSupercard = const ()
+convertTextToOutputType (FFSourceCs _) = const ()
 convertTextToOutputType FFSourceDegiroPortfolio = decodeUtf8
 convertTextToOutputType FFSourceEasyRide = const ()
 convertTextToOutputType FFSourceFinpensionPortfolioTotal = decodeUtf8
@@ -61,9 +73,9 @@ convertTextToOutputType FFSourceUberEats = const ()
 -- Throws IOException on error.
 runFindataFetcher ::
   (MonadIO m) =>
-  FindataFetcherSource outputType ->
+  FindataFetcherSource parameters output ->
   -- The stdout of findata-fetcher
-  m outputType
+  m output
 runFindataFetcher source = do
   homeDir <- home
   ffPath <-
@@ -77,9 +89,11 @@ runFindataFetcher source = do
   (exitCode, stdout) <-
     TurtleB.procStrict
       ffPath
-      [ "--config_file=" <> configFilePath
-      , findataFetcherSourceToCommand source
-      ]
+      ( [ "--config_file=" <> configFilePath
+        , findataFetcherSourceToCommand source
+        ]
+          <> sourceToParameters source
+      )
       mempty
   case exitCode of
     Turtle.ExitSuccess -> return $ convertTextToOutputType source stdout
