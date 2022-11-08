@@ -3,11 +3,14 @@ module CLI (individualPipesP) where
 
 import Auto (pullAuto)
 import Bcge (pullBcge)
+import qualified Control.Foldl as Foldl
 import Control.Funnel (fetchTranscodeAppend)
 import Control.Monad.Cont (MonadIO, liftIO)
+import Data.Bool (bool)
 import Data.ByteString (ByteString)
 import Data.Either.Extra (fromEither)
 import Data.Text (Text)
+import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Degiro (pullDegiroPortfolio)
 import FindataFetcher (
@@ -16,7 +19,12 @@ import FindataFetcher (
   runFindataFetcher,
  )
 import FindataTranscoder (
-  FindataTranscoderSource (FindataTranscoderBcgeCc, FindataTranscoderFinpensionPortfolioTotals, FindataTranscoderIBActivity),
+  FindataTranscoderSource (
+    FindataTranscoderBcgeCc,
+    FindataTranscoderCs,
+    FindataTranscoderFinpensionPortfolioTotals,
+    FindataTranscoderIBActivity
+  ),
   findataTranscoder,
  )
 import Options.Applicative (
@@ -28,10 +36,19 @@ import Options.Applicative (
   subparser,
   (<**>),
  )
-import PdfToText (PdfToTextInputMode (PttInputModeStdIn), PdfToTextMode (Raw), PdfToTextOutputMode (PttOutputModeStdOut), pdftotext)
+import PdfToText (
+  PdfToTextInputMode (PttInputModeStdIn),
+  PdfToTextMode (Raw),
+  PdfToTextOutputMode (PttOutputModeStdOut),
+  pdftotext,
+ )
 import Splitwise (pullSplitwise)
-import Turtle (encodeString, select, toText, (</>))
+import System.FilePath.Glob (compile, match)
+import Turtle (cd, encodeString, fromText, ls, select, toText, (</>))
+import qualified Turtle
 import Turtle.Extra (posixLineToLine, textToPosixLines, textToShell)
+import Turtle.Line (textToLines)
+import Turtle.Prelude (rm)
 import Wallet (appendTransactionToWallet, getWallet, getWalletDir)
 
 pullBcgeCc :: (MonadIO m) => m ()
@@ -51,6 +68,15 @@ pullCS = do
   walletDir <- getWalletDir
   let csDownloadDir = walletDir </> "updates/charles-schwab-transaction-history"
   runFindataFetcher (FFSourceCs (FindataFetcherCsParameters (fromEither $ toText csDownloadDir)))
+  Turtle.reduce Foldl.mconcat $ do
+    cd csDownloadDir
+    file <- ls $ Turtle.fromText "."
+    csv <- bool Turtle.empty (return file) (match (compile "*.csv") (Turtle.encodeString file))
+    csvText :: Text <- liftIO $ Turtle.readTextFile csv
+    ledger :: Text <- findataTranscoder FindataTranscoderCs (Turtle.select $ textToLines csvText)
+    let csvAsText :: String = T.unpack . fromEither . toText $ csv
+    liftIO $ T.writeFile (csvAsText <> ".ledger") ledger
+    rm csv
 
 pullFinpension :: (MonadIO m) => m ()
 pullFinpension = do
