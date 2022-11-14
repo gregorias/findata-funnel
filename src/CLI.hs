@@ -104,6 +104,10 @@ pullIB = do
   walletDir <- getWalletDir
   liftIO $ T.appendFile (encodeString $ walletDir </> "updates/ib.ledger") ledger
 
+pullRevolut :: (MonadIO m) => m ()
+pullRevolut = do
+  return ()
+
 pullSplitwiseFull :: IO ()
 pullSplitwiseFull = do
   wallet <- getWallet
@@ -143,6 +147,10 @@ individualPipesP =
             "ib"
             "Pulls Interactive Brokers data from Internet into a Ledger file in the wallet directory."
             pullIB
+        , pullCommand
+            "revolut"
+            "[TODO] Pulls Revolut data from Internet into Ledger files in the wallet directory."
+            pullRevolut
         , pullCommand
             "splitwise"
             "Pulls Splitwise data from Internet and appends Splitwise status to the wallet."
