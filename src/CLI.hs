@@ -15,7 +15,12 @@ import qualified Data.Text.IO as T
 import Degiro (pullDegiroPortfolio)
 import FindataFetcher (
   FindataFetcherCsParameters (FindataFetcherCsParameters),
-  FindataFetcherSource (FFSourceBcgeCc, FFSourceCs, FFSourceFinpensionPortfolioTotal, FFSourceIB),
+  FindataFetcherSource (
+    FFSourceBcgeCc,
+    FFSourceCs,
+    FFSourceFinpensionPortfolioTotal,
+    FFSourceIB
+  ),
   runFindataFetcher,
  )
 import FindataTranscoder (
@@ -23,7 +28,8 @@ import FindataTranscoder (
     FindataTranscoderBcgeCc,
     FindataTranscoderCs,
     FindataTranscoderFinpensionPortfolioTotals,
-    FindataTranscoderIBActivity
+    FindataTranscoderIBActivity,
+    FindataTranscoderRevolut
   ),
   findataTranscoder,
  )
@@ -106,7 +112,17 @@ pullIB = do
 
 pullRevolut :: (MonadIO m) => m ()
 pullRevolut = do
-  return ()
+  walletDir <- getWalletDir
+  let revolutDownloadDir = walletDir </> "updates/revolut"
+  cd revolutDownloadDir
+  Turtle.reduce Foldl.mconcat $ do
+    file <- ls $ Turtle.fromText "."
+    csv :: Turtle.FilePath <- bool Turtle.empty (return file) (match (compile "*.csv") (Turtle.encodeString file))
+    csvText :: Text <- liftIO $ Turtle.readTextFile csv
+    ledger :: Text <- findataTranscoder FindataTranscoderRevolut (Turtle.select $ textToLines csvText)
+    let csvAsText :: String = T.unpack . fromEither . toText $ csv
+    liftIO $ T.writeFile (csvAsText <> ".ledger") ledger
+    rm csv
 
 pullSplitwiseFull :: IO ()
 pullSplitwiseFull = do
