@@ -15,12 +15,8 @@ import qualified Data.Text.IO as T
 import Degiro (pullDegiroPortfolio)
 import FindataFetcher (
   FindataFetcherCsParameters (FindataFetcherCsParameters),
-  FindataFetcherSource (
-    FFSourceBcgeCc,
-    FFSourceCs,
-    FFSourceFinpensionPortfolioTotal,
-    FFSourceIB
-  ),
+  FindataFetcherRevolutParameters (FindataFetcherRevolutParameters),
+  FindataFetcherSource (..),
   runFindataFetcher,
  )
 import FindataTranscoder (
@@ -114,6 +110,7 @@ pullRevolut :: (MonadIO m) => m ()
 pullRevolut = do
   walletDir <- getWalletDir
   let revolutDownloadDir = walletDir </> "updates/revolut"
+  runFindataFetcher (FFSourceRevolut (FindataFetcherRevolutParameters (fromEither $ toText revolutDownloadDir)))
   cd revolutDownloadDir
   Turtle.reduce Foldl.mconcat $ do
     file <- ls $ Turtle.fromText "."

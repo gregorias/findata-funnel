@@ -2,6 +2,7 @@
 module FindataFetcher (
   FindataFetcherSource (..),
   FindataFetcherCsParameters (..),
+  FindataFetcherRevolutParameters (..),
   runFindataFetcher,
 ) where
 
@@ -26,12 +27,17 @@ data FindataFetcherSource parameters output where
   FFSourceGalaxus :: FindataFetcherSource () ()
   FFSourceIB :: FindataFetcherSource () Text
   FFSourcePatreon :: FindataFetcherSource () ()
+  FFSourceRevolut :: FindataFetcherRevolutParameters -> FindataFetcherSource FindataFetcherRevolutParameters ()
   FFSourceRevolutMail :: FindataFetcherSource () ()
   FFSourceSplitwise :: FindataFetcherSource () Text
   FFSourceUberEats :: FindataFetcherSource () ()
 
 newtype FindataFetcherCsParameters = FindataFetcherCsParameters
   { findataFetcherCsParametersDownloadDirectory :: Text
+  }
+
+newtype FindataFetcherRevolutParameters = FindataFetcherRevolutParameters
+  { findataFetcherRevolutParametersDownloadDirectory :: Text
   }
 
 findataFetcherSourceToCommand :: FindataFetcherSource a b -> Text
@@ -45,12 +51,14 @@ findataFetcherSourceToCommand FFSourceFinpensionPortfolioTotal = "pull-finpensio
 findataFetcherSourceToCommand FFSourceGalaxus = "pull-galaxus"
 findataFetcherSourceToCommand FFSourceIB = "pull-ib"
 findataFetcherSourceToCommand FFSourcePatreon = "pull-patreon"
+findataFetcherSourceToCommand (FFSourceRevolut _) = "pull-revolut"
 findataFetcherSourceToCommand FFSourceRevolutMail = "pull-revolut-mail"
 findataFetcherSourceToCommand FFSourceSplitwise = "pull-splitwise"
 findataFetcherSourceToCommand FFSourceUberEats = "pull-uber-eats"
 
 sourceToParameters :: FindataFetcherSource a b -> [Text]
 sourceToParameters (FFSourceCs (FindataFetcherCsParameters{findataFetcherCsParametersDownloadDirectory = downloadDirectory})) = ["--download-directory=" <> downloadDirectory]
+sourceToParameters (FFSourceRevolut (FindataFetcherRevolutParameters{findataFetcherRevolutParametersDownloadDirectory = downloadDirectory})) = ["--download-directory=" <> downloadDirectory]
 sourceToParameters _ = []
 
 convertTextToOutputType :: FindataFetcherSource a output -> ByteString -> output
@@ -64,6 +72,7 @@ convertTextToOutputType FFSourceFinpensionPortfolioTotal = decodeUtf8
 convertTextToOutputType FFSourceGalaxus = const ()
 convertTextToOutputType FFSourceIB = decodeUtf8
 convertTextToOutputType FFSourcePatreon = const ()
+convertTextToOutputType (FFSourceRevolut _) = const ()
 convertTextToOutputType FFSourceRevolutMail = const ()
 convertTextToOutputType FFSourceSplitwise = decodeUtf8
 convertTextToOutputType FFSourceUberEats = const ()
