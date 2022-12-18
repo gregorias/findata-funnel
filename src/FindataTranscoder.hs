@@ -19,6 +19,7 @@ data FindataTranscoderSource
   | FindataTranscoderGalaxus
   | FindataTranscoderGPayslip
   | FindataTranscoderIBActivity
+  | FindataTranscoderMBank
   | FindataTranscoderPatreon
   | FindataTranscoderRevolut
   | FindataTranscoderSplitwise
@@ -34,6 +35,7 @@ findataTranscoderSourceToCommand FindataTranscoderFinpensionPortfolioTotals = "p
 findataTranscoderSourceToCommand FindataTranscoderGalaxus = "parse-galaxus"
 findataTranscoderSourceToCommand FindataTranscoderGPayslip = "parse-gpayslip"
 findataTranscoderSourceToCommand FindataTranscoderIBActivity = "parse-ib-activity"
+findataTranscoderSourceToCommand FindataTranscoderMBank = "parse-mbank"
 findataTranscoderSourceToCommand FindataTranscoderPatreon = "parse-patreon"
 findataTranscoderSourceToCommand FindataTranscoderRevolut = "parse-revolut"
 findataTranscoderSourceToCommand FindataTranscoderSplitwise = "parse-splitwise"

@@ -20,13 +20,7 @@ import FindataFetcher (
   runFindataFetcher,
  )
 import FindataTranscoder (
-  FindataTranscoderSource (
-    FindataTranscoderBcgeCc,
-    FindataTranscoderCs,
-    FindataTranscoderFinpensionPortfolioTotals,
-    FindataTranscoderIBActivity,
-    FindataTranscoderRevolut
-  ),
+  FindataTranscoderSource (..),
   findataTranscoder,
  )
 import Options.Applicative (
@@ -97,6 +91,18 @@ pullFinpension = do
       . Turtle.select
       . textToPosixLines
 
+pullMBank :: (MonadIO m) => m ()
+pullMBank = do
+  mBankCsv <- runFindataFetcher FFSourceMBank
+  mBankLedger <- findataTranscoder FindataTranscoderMBank (textToFindataTranscoderInput mBankCsv)
+  mBankLedgerFile <- (</> "updates/mbank.ledger") <$> getWalletDir
+  liftIO $ T.writeFile (filePathToString mBankLedgerFile) mBankLedger
+ where
+  filePathToString = T.unpack . fromEither . toText
+
+  textToFindataTranscoderInput :: Text -> Turtle.Shell Turtle.Line
+  textToFindataTranscoderInput = fmap posixLineToLine . textToShell
+
 pullIB :: (MonadIO m) => m ()
 pullIB = do
   ibCsv :: Text <- runFindataFetcher FFSourceIB
@@ -156,6 +162,10 @@ individualPipesP =
             "finpension"
             "Pulls Finpension portfolio status data from Internet and appends it to the wallet."
             pullFinpension
+        , pullCommand
+            "mbank"
+            "Pulls mBank's transaction history into a Ledger file in the wallet directory."
+            pullMBank
         , pullCommand
             "ib"
             "Pulls Interactive Brokers data from Internet into a Ledger file in the wallet directory."

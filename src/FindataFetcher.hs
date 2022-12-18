@@ -26,6 +26,7 @@ data FindataFetcherSource parameters output where
   FFSourceFinpensionPortfolioTotal :: FindataFetcherSource () Text
   FFSourceGalaxus :: FindataFetcherSource () ()
   FFSourceIB :: FindataFetcherSource () Text
+  FFSourceMBank :: FindataFetcherSource () Text
   FFSourcePatreon :: FindataFetcherSource () ()
   FFSourceRevolut :: FindataFetcherRevolutParameters -> FindataFetcherSource FindataFetcherRevolutParameters ()
   FFSourceRevolutMail :: FindataFetcherSource () ()
@@ -50,6 +51,7 @@ findataFetcherSourceToCommand FFSourceEasyRide = "pull-easyride-receipts"
 findataFetcherSourceToCommand FFSourceFinpensionPortfolioTotal = "pull-finpension-portfolio-total"
 findataFetcherSourceToCommand FFSourceGalaxus = "pull-galaxus"
 findataFetcherSourceToCommand FFSourceIB = "pull-ib"
+findataFetcherSourceToCommand FFSourceMBank = "pull-mbank"
 findataFetcherSourceToCommand FFSourcePatreon = "pull-patreon"
 findataFetcherSourceToCommand (FFSourceRevolut _) = "pull-revolut"
 findataFetcherSourceToCommand FFSourceRevolutMail = "pull-revolut-mail"
@@ -71,6 +73,7 @@ convertTextToOutputType FFSourceEasyRide = const ()
 convertTextToOutputType FFSourceFinpensionPortfolioTotal = decodeUtf8
 convertTextToOutputType FFSourceGalaxus = const ()
 convertTextToOutputType FFSourceIB = decodeUtf8
+convertTextToOutputType FFSourceMBank = decodeUtf8
 convertTextToOutputType FFSourcePatreon = const ()
 convertTextToOutputType (FFSourceRevolut _) = const ()
 convertTextToOutputType FFSourceRevolutMail = const ()
