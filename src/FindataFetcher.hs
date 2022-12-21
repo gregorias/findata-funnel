@@ -23,7 +23,7 @@ data FindataFetcherSource parameters output where
   FFSourceCs :: FindataFetcherCsParameters -> FindataFetcherSource FindataFetcherCsParameters ()
   FFSourceDegiroPortfolio :: FindataFetcherSource () Text
   FFSourceEasyRide :: FindataFetcherSource () ()
-  FFSourceFinpensionPortfolioTotal :: FindataFetcherSource () Text
+  FFSourceFinpension :: FindataFetcherSource () Text
   FFSourceGalaxus :: FindataFetcherSource () ()
   FFSourceIB :: FindataFetcherSource () Text
   FFSourceMBank :: FindataFetcherSource () Text
@@ -48,7 +48,7 @@ findataFetcherSourceToCommand FFSourceCoopSupercard = "pull-coop-supercard"
 findataFetcherSourceToCommand (FFSourceCs _) = "pull-cs-account-history"
 findataFetcherSourceToCommand FFSourceDegiroPortfolio = "pull-degiro-portfolio"
 findataFetcherSourceToCommand FFSourceEasyRide = "pull-easyride-receipts"
-findataFetcherSourceToCommand FFSourceFinpensionPortfolioTotal = "pull-finpension-portfolio-total"
+findataFetcherSourceToCommand FFSourceFinpension = "pull-finpension"
 findataFetcherSourceToCommand FFSourceGalaxus = "pull-galaxus"
 findataFetcherSourceToCommand FFSourceIB = "pull-ib"
 findataFetcherSourceToCommand FFSourceMBank = "pull-mbank"
@@ -70,7 +70,7 @@ convertTextToOutputType FFSourceCoopSupercard = const ()
 convertTextToOutputType (FFSourceCs _) = const ()
 convertTextToOutputType FFSourceDegiroPortfolio = decodeUtf8
 convertTextToOutputType FFSourceEasyRide = const ()
-convertTextToOutputType FFSourceFinpensionPortfolioTotal = decodeUtf8
+convertTextToOutputType FFSourceFinpension = decodeUtf8
 convertTextToOutputType FFSourceGalaxus = const ()
 convertTextToOutputType FFSourceIB = decodeUtf8
 convertTextToOutputType FFSourceMBank = decodeUtf8

@@ -78,12 +78,12 @@ pullFinpension :: (MonadIO m) => m ()
 pullFinpension = do
   wallet <- getWallet
   fetchTranscodeAppend
-    (runFindataFetcher FFSourceFinpensionPortfolioTotal)
+    (runFindataFetcher FFSourceFinpension)
     transcodeFinpension
     (appendToWallet wallet)
  where
   transcodeFinpension =
-    findataTranscoder FindataTranscoderFinpensionPortfolioTotals
+    findataTranscoder FindataTranscoderFinpension
       . fmap posixLineToLine
       . textToShell
   appendToWallet wallet =
