@@ -55,4 +55,6 @@ findataTranscoder source inputContent = do
   (exitCode, txt) <- Turtle.procStrict ftPath [findataTranscoderSourceToCommand source] inputContent
   case exitCode of
     Turtle.ExitSuccess -> return txt
-    Turtle.ExitFailure _ -> failIO "findata-transcoder has failed.\n"
+    -- Do not add a newline to the error message, because IOException's Show instance wraps the
+    -- message in parantheses, e.g., "user error (findata-transcoder has failed)".
+    Turtle.ExitFailure _ -> failIO "findata-transcoder has failed."
