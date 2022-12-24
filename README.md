@@ -24,7 +24,7 @@ For other shells, check out [optparse-applicative's documentation](https://hacka
 
 ## Development
 
-This section is intended for developrs.
+This section is intended for developers.
 
 ### Dev environment setup
 
