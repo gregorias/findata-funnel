@@ -3,15 +3,15 @@ module CLI (individualPipesP) where
 
 import Auto (pullAuto)
 import Bcge (pullBcge)
-import qualified Control.Foldl as Foldl
+import Control.Foldl qualified as Foldl
 import Control.Funnel (fetchTranscodeAppend)
 import Control.Monad.Cont (MonadIO, liftIO)
 import Data.Bool (bool)
 import Data.ByteString (ByteString)
 import Data.Either.Extra (fromEither)
 import Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.IO as T
+import Data.Text qualified as T
+import Data.Text.IO qualified as T
 import Degiro (pullDegiroPortfolio)
 import FindataFetcher (
   FindataFetcherCsParameters (FindataFetcherCsParameters),
@@ -42,7 +42,7 @@ import PdfToText (
 import Splitwise (pullSplitwise)
 import System.FilePath.Glob (compile, match)
 import Turtle (cd, encodeString, fromText, ls, select, toText, (</>))
-import qualified Turtle
+import Turtle qualified
 import Turtle.Extra (posixLineToLine, textToPosixLines, textToShell)
 import Turtle.Line (textToLines)
 import Turtle.Prelude (rm)
@@ -140,7 +140,7 @@ individualPipesP =
         [ pullCommand
             "auto"
             ( "Pulls financial data from sources that don't require my involvement.\n"
-                <> "Currently this entails: Coop, EasyRide, Galaxus, Patreon, Uber Eats receipts, and Revolut statements sent to gMail.\n"
+                <> "Currently this entails: Coop, EasyRide, Galaxus, GPayslips, Patreon Uber Eats receipts, and Revolut statements sent to gMail.\n"
             )
             pullAuto
         , pullCommand
