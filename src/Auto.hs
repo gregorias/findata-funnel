@@ -7,32 +7,26 @@
 -- don't require my input to solve a 2FA challenge.
 module Auto (
   pullAuto,
-  -- | Exports of individual handlers for testing purposes.
-  moveGPayslipToWallet,
 ) where
 
 import Control.Concurrent.ParallelIO.Global (parallel)
 import Control.Exception (IOException, catch, throwIO, try)
 import qualified Control.Foldl as Foldl
 import Control.Monad (when)
-import Control.Monad.Except (MonadError (catchError, throwError), runExceptT)
-import Control.Monad.IO.Class (MonadIO (liftIO))
-import qualified Control.Monad.Managed as Managed
+import Control.Monad.IO.Class (MonadIO)
 import Data.Bool (bool)
 import Data.Either (isRight)
 import Data.Either.Combinators (leftToMaybe)
-import Data.Text (Text)
-import qualified Data.Text.IO as T
 import qualified FindataFetcher as FF
 import FindataTranscoder (
   FindataTranscoderSource (..),
-  findataTranscoder,
  )
+import GPayslip (pullGooglePayslips)
 import Galaxus (pullGalaxusReceipts)
 import PdfToText (
   PdfToTextInputMode (PttInputModeFilePath),
   PdfToTextMode (..),
-  PdfToTextOutputMode (PttOutputModeFilePath, PttOutputModeStdOut),
+  PdfToTextOutputMode (PttOutputModeFilePath),
   pdftotext,
  )
 import Pipeline (parseTextStatements)
@@ -40,8 +34,6 @@ import System.FilePath.Glob (compile, match)
 import System.IO (hPutStr, hPutStrLn, stderr)
 import Turtle (
   ExitCode (ExitFailure),
-  Line,
-  Shell,
   cd,
   exit,
   home,
@@ -51,9 +43,7 @@ import Turtle (
   (</>),
  )
 import qualified Turtle
-import Turtle.Extra (decodePathM, emptyLine)
-import qualified Turtle.Extra as Turtle
-import Wallet (appendTransactionToWallet, getWallet, getWalletDir)
+import Wallet (getWalletDir)
 
 downloads :: (MonadIO io) => io Turtle.FilePath
 downloads = do
@@ -85,41 +75,6 @@ textifyPdf subdir pdf = do
   let txtFile = walletDir </> subdir </> (pdf <.> "txt")
   pdftotext Raw (PttInputModeFilePath pdf) (PttOutputModeFilePath txtFile)
 
--- | Moves Google Payslip PDF to the main wallet file.
-moveGPayslipToWallet ::
-  (MonadError e m, MonadIO m, e ~ Text) =>
-  -- | The ledger text file.
-  Turtle.FilePath ->
-  -- | The Google payslip PDF.
-  Turtle.FilePath ->
-  m ()
-moveGPayslipToWallet wallet pdf = flip catchError prependContext $ do
-  gpayslipTxt :: Text <- transcode pdf
-  let gpayslipContent :: Shell Line = Turtle.select $ Turtle.textToLines gpayslipTxt
-  ledgerTransaction :: Text <- findataTranscoder FindataTranscoderGPayslip gpayslipContent
-  Turtle.append wallet (Turtle.select $ emptyLine <> Turtle.textToLines ledgerTransaction)
-  rm pdf
- where
-  prependContext errMsg = do
-    pdfPath <- decodePathM pdf
-    throwError $
-      "Could not move Google Payslip (" <> pdfPath <> ") to the wallet file.\n" <> errMsg
-
-  unsafeRunManaged :: Managed.Managed a -> IO a
-  unsafeRunManaged = flip Managed.with return
-
-  transcode :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m Text
-  transcode pdf' = do
-    maybeContent <- liftIO . unsafeRunManaged $ do
-      tmpTxt <- Turtle.mktempfile (Turtle.decodeString "/tmp") ""
-      maybeSuccess :: (Either Text ()) <-
-        runExceptT $
-          pdftotext Layout (PttInputModeFilePath pdf') (PttOutputModeFilePath tmpTxt)
-      liftIO $
-        sequence $
-          T.readFile (Turtle.encodeString tmpTxt) <$ maybeSuccess
-    either throwError return maybeContent
-
 -- | Pulls coop receipts to the wallet.
 --
 -- Throws an IO exception on failure.
@@ -145,25 +100,6 @@ pullCoopReceipts = do
 pullEasyRideReceipts :: IO ()
 pullEasyRideReceipts = do
   FF.runFindataFetcher FF.FFSourceEasyRide
-
--- | Pulls Google Payslips to the wallet.
---
--- Throws an IO exception on failure.
-pullGooglePayslips :: IO ()
-pullGooglePayslips = do
-  homeDir <- home
-  let payslipSourceDir = homeDir </> Turtle.fromText "Google Drive/My Drive/Payslips"
-  let payslipTargetDir = homeDir </> Turtle.fromText "Documents/Job/Google/Payslips"
-  Turtle.reduce Foldl.mconcat $ do
-    payslipSource <- ls payslipSourceDir
-    let payslipTarget = payslipTargetDir </> Turtle.filename payslipSource
-    Turtle.mv payslipSource payslipTarget
-    payslipTxt <-
-      Turtle.select . Turtle.textToLines
-        <$> pdftotext Layout (PttInputModeFilePath payslipTarget) PttOutputModeStdOut
-    transaction <- findataTranscoder FindataTranscoderGPayslip payslipTxt
-    wallet <- getWallet
-    appendTransactionToWallet wallet (Turtle.select $ Turtle.textToPosixLines transaction)
 
 -- | Pulls Patreon receipts to the wallet.
 --

@@ -33,6 +33,7 @@ library
       FindataFetcher
       FindataTranscoder
       Galaxus
+      GPayslip
       PdfToText
       Pipeline
       Splitwise

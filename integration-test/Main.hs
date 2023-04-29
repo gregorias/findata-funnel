@@ -8,7 +8,6 @@
 -- installed in the system.
 module Main (main) where
 
-import Auto (moveGPayslipToWallet)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Managed (Managed, with)
@@ -17,6 +16,7 @@ import Data.Either (isRight)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
+import GPayslip (moveGPayslipToWallet)
 import Test.Hspec (
   Spec,
   describe,
@@ -54,7 +54,7 @@ gpayslipTest = it "Moves a payslip to a ledger" $ do
   createTmpPayslipPdf :: (MonadManaged m) => m Turtle.FilePath
   createTmpPayslipPdf = do
     tmpPdf <- Turtle.mktempfile (Turtle.fromText "/tmp") ""
-    Turtle.cp (Turtle.fromText "integration-test/data/gpayslip-20220525.pdf") tmpPdf
+    Turtle.cp (Turtle.fromText "integration-test/data/gpayslip.pdf") tmpPdf
     return tmpPdf
   createTmpWalletTxt :: (MonadManaged m) => m Turtle.FilePath
   createTmpWalletTxt = Turtle.mktempfile (Turtle.fromText "/tmp") ""
