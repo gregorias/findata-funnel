@@ -21,7 +21,6 @@ import qualified FindataFetcher as FF
 import FindataTranscoder (
   FindataTranscoderSource (..),
  )
-import GPayslip (pullGooglePayslips)
 import Galaxus (pullGalaxusReceipts)
 import PdfToText (
   PdfToTextInputMode (PttInputModeFilePath),
@@ -137,7 +136,6 @@ pullAuto = do
         <$> [ ("Coop pull", pullCoopReceipts)
             , ("EasyRide pull", pullEasyRideReceipts)
             , ("Galaxus pull", pullGalaxusReceipts)
-            , ("Google payslip pull", pullGooglePayslips)
             , ("Patreon pull", pullPatreonReceipts)
             , ("Revolut pull", pullRevolutReceipts)
             , ("Uber Eats pull", pullUberEatsReceipts)

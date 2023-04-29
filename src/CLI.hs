@@ -24,6 +24,7 @@ import FindataTranscoder (
   findataTranscoder,
  )
 import Galaxus (pullGalaxusReceipts)
+import GPayslip (pullGooglePayslips)
 import Options.Applicative (
   Parser,
   command,
@@ -140,7 +141,7 @@ individualPipesP =
         [ pullCommand
             "auto"
             ( "Pulls financial data from sources that don't require my involvement.\n"
-                <> "Currently this entails: Coop, EasyRide, Galaxus, GPayslips, Patreon Uber Eats receipts, and Revolut statements sent to gMail.\n"
+                <> "Currently this entails: Coop, EasyRide, Galaxus, Patreon Uber Eats receipts, and Revolut statements sent to gMail.\n"
             )
             pullAuto
         , pullCommand
@@ -167,6 +168,10 @@ individualPipesP =
             "galaxus"
             "Pulls Galaxus email receipts and appends them to the wallet."
             pullGalaxusReceipts
+        , pullCommand
+            "gpayslip"
+            "Pulls Google Payslips from Internet and appends them to the wallet."
+            pullGooglePayslips
         , pullCommand
             "mbank"
             "Pulls mBank's transaction history into a Ledger file in the wallet directory."
