@@ -1,6 +1,7 @@
 .stack-work/
 *~
 *.hie
+dist-newstyle
 
 # NPM files
 package-lock.json

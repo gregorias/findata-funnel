@@ -23,6 +23,7 @@ import FindataTranscoder (
   FindataTranscoderSource (..),
   findataTranscoder,
  )
+import Galaxus (pullGalaxusReceipts)
 import Options.Applicative (
   Parser,
   command,
@@ -162,6 +163,10 @@ individualPipesP =
             "finpension"
             "Pulls Finpension portfolio status data from Internet and appends it to the wallet."
             pullFinpension
+        , pullCommand
+            "galaxus"
+            "Pulls Galaxus email receipts and appends them to the wallet."
+            pullGalaxusReceipts
         , pullCommand
             "mbank"
             "Pulls mBank's transaction history into a Ledger file in the wallet directory."

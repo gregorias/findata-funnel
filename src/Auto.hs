@@ -28,12 +28,14 @@ import FindataTranscoder (
   FindataTranscoderSource (..),
   findataTranscoder,
  )
+import Galaxus (pullGalaxusReceipts)
 import PdfToText (
   PdfToTextInputMode (PttInputModeFilePath),
   PdfToTextMode (..),
   PdfToTextOutputMode (PttOutputModeFilePath, PttOutputModeStdOut),
   pdftotext,
  )
+import Pipeline (parseTextStatements)
 import System.FilePath.Glob (compile, match)
 import System.IO (hPutStr, hPutStrLn, stderr)
 import Turtle (
@@ -82,22 +84,6 @@ textifyPdf subdir pdf = do
   walletDir <- getWalletDir
   let txtFile = walletDir </> subdir </> (pdf <.> "txt")
   pdftotext Raw (PttInputModeFilePath pdf) (PttOutputModeFilePath txtFile)
-
--- | Parses all text statements in a directory, appends them to a wallet, and deletes the source.
-parseTextStatements ::
-  -- | Source directory
-  Turtle.FilePath ->
-  -- | Statement filename glob pattern
-  String ->
-  FindataTranscoderSource ->
-  IO ()
-parseTextStatements sourceDir stmtGlobPattern ftSource = Turtle.reduce Foldl.mconcat $ do
-  file <- ls sourceDir
-  stmt <- bool Turtle.empty (return file) (match (compile stmtGlobPattern) (Turtle.encodeString $ Turtle.filename file))
-  transaction :: Text <- findataTranscoder ftSource (Turtle.input stmt)
-  wallet <- getWallet
-  appendTransactionToWallet wallet (Turtle.select $ Turtle.textToPosixLines transaction)
-  rm stmt
 
 -- | Moves Google Payslip PDF to the main wallet file.
 moveGPayslipToWallet ::
@@ -159,15 +145,6 @@ pullCoopReceipts = do
 pullEasyRideReceipts :: IO ()
 pullEasyRideReceipts = do
   FF.runFindataFetcher FF.FFSourceEasyRide
-
--- | Pulls Galaxus receipts to the wallet.
---
--- Throws an IO exception on failure.
-pullGalaxusReceipts :: IO ()
-pullGalaxusReceipts = do
-  FF.runFindataFetcher FF.FFSourceGalaxus
-  downloadsDir :: Turtle.FilePath <- downloads
-  parseTextStatements downloadsDir "*.galaxus" FindataTranscoderGalaxus
 
 -- | Pulls Google Payslips to the wallet.
 --
