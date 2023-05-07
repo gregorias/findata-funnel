@@ -17,6 +17,7 @@ data FindataTranscoderSource
   | FindataTranscoderDegiroPortfolio
   | FindataTranscoderFinpension
   | FindataTranscoderGalaxus
+  | FindataTranscoderGooglePlay
   | FindataTranscoderGPayslip
   | FindataTranscoderIBActivity
   | FindataTranscoderMBank
@@ -33,6 +34,7 @@ findataTranscoderSourceToCommand FindataTranscoderDegiroAccount = "parse-degiro-
 findataTranscoderSourceToCommand FindataTranscoderDegiroPortfolio = "parse-degiro-portfolio"
 findataTranscoderSourceToCommand FindataTranscoderFinpension = "parse-finpension"
 findataTranscoderSourceToCommand FindataTranscoderGalaxus = "parse-galaxus"
+findataTranscoderSourceToCommand FindataTranscoderGooglePlay = "parse-google-play"
 findataTranscoderSourceToCommand FindataTranscoderGPayslip = "parse-gpayslip"
 findataTranscoderSourceToCommand FindataTranscoderIBActivity = "parse-ib-activity"
 findataTranscoderSourceToCommand FindataTranscoderMBank = "parse-mbank"

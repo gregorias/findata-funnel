@@ -48,6 +48,7 @@ import Turtle.Extra (posixLineToLine, textToPosixLines, textToShell)
 import Turtle.Line (textToLines)
 import Turtle.Prelude (rm)
 import Wallet (appendTransactionToWallet, getWallet, getWalletDir)
+import GooglePlay (pullGooglePlayReceipts)
 
 pullBcgeCc :: (MonadIO m) => m ()
 pullBcgeCc = do
@@ -168,6 +169,10 @@ individualPipesP =
             "galaxus"
             "Pulls Galaxus email receipts and appends them to the wallet."
             pullGalaxusReceipts
+        , pullCommand
+            "google-play"
+            "Pulls Google Play email receipts and appends them to the wallet."
+            pullGooglePlayReceipts
         , pullCommand
             "gpayslip"
             "Pulls Google Payslips from Internet and appends them to the wallet."

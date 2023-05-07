@@ -22,6 +22,7 @@ import FindataTranscoder (
   FindataTranscoderSource (..),
  )
 import Galaxus (pullGalaxusReceipts)
+import GooglePlay (pullGooglePlayReceipts)
 import PdfToText (
   PdfToTextInputMode (PttInputModeFilePath),
   PdfToTextMode (..),
@@ -136,6 +137,7 @@ pullAuto = do
         <$> [ ("Coop pull", pullCoopReceipts)
             , ("EasyRide pull", pullEasyRideReceipts)
             , ("Galaxus pull", pullGalaxusReceipts)
+            , ("Google Play pull", pullGooglePlayReceipts)
             , ("Patreon pull", pullPatreonReceipts)
             , ("Revolut pull", pullRevolutReceipts)
             , ("Uber Eats pull", pullUberEatsReceipts)

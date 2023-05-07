@@ -25,6 +25,7 @@ data FindataFetcherSource parameters output where
   FFSourceEasyRide :: FindataFetcherSource () ()
   FFSourceFinpension :: FindataFetcherSource () Text
   FFSourceGalaxus :: FindataFetcherSource () ()
+  FFSourceGooglePlay :: FindataFetcherSource () ()
   FFSourceIB :: FindataFetcherSource () Text
   FFSourceMBank :: FindataFetcherSource () Text
   FFSourcePatreon :: FindataFetcherSource () ()
@@ -50,6 +51,7 @@ findataFetcherSourceToCommand FFSourceDegiroPortfolio = "pull-degiro-portfolio"
 findataFetcherSourceToCommand FFSourceEasyRide = "pull-easyride-receipts"
 findataFetcherSourceToCommand FFSourceFinpension = "pull-finpension"
 findataFetcherSourceToCommand FFSourceGalaxus = "pull-galaxus"
+findataFetcherSourceToCommand FFSourceGooglePlay = "pull-google-play"
 findataFetcherSourceToCommand FFSourceIB = "pull-ib"
 findataFetcherSourceToCommand FFSourceMBank = "pull-mbank"
 findataFetcherSourceToCommand FFSourcePatreon = "pull-patreon"
@@ -72,6 +74,7 @@ convertTextToOutputType FFSourceDegiroPortfolio = decodeUtf8
 convertTextToOutputType FFSourceEasyRide = const ()
 convertTextToOutputType FFSourceFinpension = decodeUtf8
 convertTextToOutputType FFSourceGalaxus = const ()
+convertTextToOutputType FFSourceGooglePlay = const ()
 convertTextToOutputType FFSourceIB = decodeUtf8
 convertTextToOutputType FFSourceMBank = decodeUtf8
 convertTextToOutputType FFSourcePatreon = const ()
