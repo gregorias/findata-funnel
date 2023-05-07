@@ -20,4 +20,4 @@ pullGooglePlayReceipts :: (MonadIO io) => io ()
 pullGooglePlayReceipts = do
   FF.runFindataFetcher FF.FFSourceGalaxus
   downloadsDir :: Turtle.FilePath <- downloads
-  parseTextStatements downloadsDir "Your Google  Play*mail" FindataTranscoderGooglePlay
+  parseTextStatements downloadsDir "Your Google Play*mail" FindataTranscoderGooglePlay
