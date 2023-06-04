@@ -1,7 +1,6 @@
 -- | This module handles using findata-fetcher.
 module FindataFetcher (
   FindataFetcherSource (..),
-  FindataFetcherCsParameters (..),
   FindataFetcherRevolutParameters (..),
   runFindataFetcher,
 ) where
@@ -20,7 +19,7 @@ data FindataFetcherSource parameters output where
   FFSourceBcge :: FindataFetcherSource () Text
   FFSourceBcgeCc :: FindataFetcherSource () ByteString
   FFSourceCoopSupercard :: FindataFetcherSource () ()
-  FFSourceCs :: FindataFetcherCsParameters -> FindataFetcherSource FindataFetcherCsParameters ()
+  FFSourceCs :: FindataFetcherSource () ByteString
   FFSourceDegiroPortfolio :: FindataFetcherSource () Text
   FFSourceEasyRide :: FindataFetcherSource () ()
   FFSourceFinpension :: FindataFetcherSource () Text
@@ -34,10 +33,6 @@ data FindataFetcherSource parameters output where
   FFSourceSplitwise :: FindataFetcherSource () Text
   FFSourceUberEats :: FindataFetcherSource () ()
 
-newtype FindataFetcherCsParameters = FindataFetcherCsParameters
-  { findataFetcherCsParametersDownloadDirectory :: Text
-  }
-
 newtype FindataFetcherRevolutParameters = FindataFetcherRevolutParameters
   { findataFetcherRevolutParametersDownloadDirectory :: Text
   }
@@ -46,7 +41,7 @@ findataFetcherSourceToCommand :: FindataFetcherSource a b -> Text
 findataFetcherSourceToCommand FFSourceBcge = "pull-bcge"
 findataFetcherSourceToCommand FFSourceBcgeCc = "pull-bcgecc"
 findataFetcherSourceToCommand FFSourceCoopSupercard = "pull-coop-supercard"
-findataFetcherSourceToCommand (FFSourceCs _) = "pull-cs-account-history"
+findataFetcherSourceToCommand FFSourceCs = "pull-cs-account-history"
 findataFetcherSourceToCommand FFSourceDegiroPortfolio = "pull-degiro-portfolio"
 findataFetcherSourceToCommand FFSourceEasyRide = "pull-easyride-receipts"
 findataFetcherSourceToCommand FFSourceFinpension = "pull-finpension"
@@ -61,7 +56,6 @@ findataFetcherSourceToCommand FFSourceSplitwise = "pull-splitwise"
 findataFetcherSourceToCommand FFSourceUberEats = "pull-uber-eats"
 
 sourceToParameters :: FindataFetcherSource a b -> [Text]
-sourceToParameters (FFSourceCs (FindataFetcherCsParameters{findataFetcherCsParametersDownloadDirectory = downloadDirectory})) = ["--download-directory=" <> downloadDirectory]
 sourceToParameters (FFSourceRevolut (FindataFetcherRevolutParameters{findataFetcherRevolutParametersDownloadDirectory = downloadDirectory})) = ["--download-directory=" <> downloadDirectory]
 sourceToParameters _ = []
 
@@ -69,7 +63,7 @@ convertTextToOutputType :: FindataFetcherSource a output -> ByteString -> output
 convertTextToOutputType FFSourceBcge = decodeUtf8
 convertTextToOutputType FFSourceBcgeCc = id
 convertTextToOutputType FFSourceCoopSupercard = const ()
-convertTextToOutputType (FFSourceCs _) = const ()
+convertTextToOutputType FFSourceCs = id
 convertTextToOutputType FFSourceDegiroPortfolio = decodeUtf8
 convertTextToOutputType FFSourceEasyRide = const ()
 convertTextToOutputType FFSourceFinpension = decodeUtf8

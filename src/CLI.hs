@@ -11,10 +11,10 @@ import Data.ByteString (ByteString)
 import Data.Either.Extra (fromEither)
 import Data.Text (Text)
 import Data.Text qualified as T
+import Data.Text.Encoding (decodeUtf8)
 import Data.Text.IO qualified as T
 import Degiro (pullDegiroPortfolio)
 import FindataFetcher (
-  FindataFetcherCsParameters (FindataFetcherCsParameters),
   FindataFetcherRevolutParameters (FindataFetcherRevolutParameters),
   FindataFetcherSource (..),
   runFindataFetcher,
@@ -23,8 +23,9 @@ import FindataTranscoder (
   FindataTranscoderSource (..),
   findataTranscoder,
  )
-import Galaxus (pullGalaxusReceipts)
 import GPayslip (pullGooglePayslips)
+import Galaxus (pullGalaxusReceipts)
+import GooglePlay (pullGooglePlayReceipts)
 import Options.Applicative (
   Parser,
   command,
@@ -48,7 +49,6 @@ import Turtle.Extra (posixLineToLine, textToPosixLines, textToShell)
 import Turtle.Line (textToLines)
 import Turtle.Prelude (rm)
 import Wallet (appendTransactionToWallet, getWallet, getWalletDir)
-import GooglePlay (pullGooglePlayReceipts)
 
 pullBcgeCc :: (MonadIO m) => m ()
 pullBcgeCc = do
@@ -62,20 +62,13 @@ pullBcgeCc = do
   let bcgeCcLedger :: FilePath = encodeString $ walletDir </> "updates/bcge-cc.ledger"
   liftIO $ T.appendFile bcgeCcLedger ledger
 
-pullCS :: (MonadIO m) => m ()
-pullCS = do
+pullCsBrokerageAccount :: (MonadIO m) => m ()
+pullCsBrokerageAccount = do
+  csStatement :: Text <- decodeUtf8 <$> runFindataFetcher FFSourceCs
+  ledger :: Text <- findataTranscoder FindataTranscoderCs $ posixLineToLine <$> textToShell csStatement
   walletDir <- getWalletDir
-  let csDownloadDir = walletDir </> "updates/charles-schwab-transaction-history"
-  runFindataFetcher (FFSourceCs (FindataFetcherCsParameters (fromEither $ toText csDownloadDir)))
-  Turtle.reduce Foldl.mconcat $ do
-    cd csDownloadDir
-    file <- ls $ Turtle.fromText "."
-    csv <- bool Turtle.empty (return file) (match (compile "*.csv") (Turtle.encodeString file))
-    csvText :: Text <- liftIO $ Turtle.readTextFile csv
-    ledger :: Text <- findataTranscoder FindataTranscoderCs (Turtle.select $ textToLines csvText)
-    let csvAsText :: String = T.unpack . fromEither . toText $ csv
-    liftIO $ T.writeFile (csvAsText <> ".ledger") ledger
-    rm csv
+  let csLedger :: FilePath = encodeString $ walletDir </> "updates/charles-schwab.ledger"
+  liftIO $ T.appendFile csLedger ledger
 
 pullFinpension :: (MonadIO m) => m ()
 pullFinpension = do
@@ -154,9 +147,9 @@ individualPipesP =
             "Pulls BCGE credit card statement data from Internet and saves it in a Ledger file in the wallet directory."
             pullBcgeCc
         , pullCommand
-            "cs"
-            "Pulls Charles Schwab's transaction history from Internet into a Ledger file in the wallet directory."
-            pullCS
+            "cs-brokerage-account"
+            "Pulls Charles Schwab brokerage account's transaction history from Internet into a Ledger file in the wallet directory."
+            pullCsBrokerageAccount
         , pullCommand
             "degiro-portfolio"
             "Pulls Degiro portfolio status data from Internet and appends it to the wallet."
