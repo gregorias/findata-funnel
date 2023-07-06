@@ -5,15 +5,15 @@ module FindataFetcher (
   runFindataFetcher,
 ) where
 
-import Control.Exception.Extra (eitherToIO, failIO)
+import Control.Exception.Extra (failIO)
 import Control.Monad.IO.Class (MonadIO)
 import Data.ByteString (ByteString)
 import Data.Text (Text)
-import qualified Data.Text as T
+import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8)
 import Turtle (home, (</>))
-import qualified Turtle
-import qualified Turtle.Bytes as TurtleB
+import Turtle qualified
+import Turtle.Bytes qualified as TurtleB
 
 data FindataFetcherSource parameters output where
   FFSourceBcge :: FindataFetcherSource () Text
@@ -87,19 +87,13 @@ runFindataFetcher ::
   m output
 runFindataFetcher source = do
   homeDir <- home
-  ffPath <-
-    eitherToFailIO
-      ("Could not convert findata-fetcher path to text.\n" <>)
-      (Turtle.toText $ homeDir </> ".local/bin/findata-fetcher")
-  configFilePath <-
-    eitherToFailIO
-      ("Could not convert findata-fetcher config path to text.\n" <>)
-      (Turtle.toText $ homeDir </> "Code/findata/fetcher/config.json")
+  let ffPath =
+        "Could not convert findata-fetcher path to text.\n"
+          <> T.pack (homeDir </> ".local/bin/findata-fetcher")
   (exitCode, stdout) <-
     TurtleB.procStrict
       ffPath
-      ( [ "--config_file=" <> configFilePath
-        , findataFetcherSourceToCommand source
+      ( [ findataFetcherSourceToCommand source
         ]
           <> sourceToParameters source
       )
@@ -108,5 +102,3 @@ runFindataFetcher source = do
     Turtle.ExitSuccess -> return $ convertTextToOutputType source stdout
     Turtle.ExitFailure _ -> failIO "findata-fetcher has failed.\n"
  where
-  eitherToFailIO :: (MonadIO io) => (a -> Text) -> Either a b -> io b
-  eitherToFailIO f = eitherToIO (userError . T.unpack . f)
