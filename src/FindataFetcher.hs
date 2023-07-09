@@ -98,4 +98,5 @@ runFindataFetcher source = do
       mempty
   case exitCode of
     Turtle.ExitSuccess -> return $ convertTextToOutputType source stdout
-    Turtle.ExitFailure _ -> failIO "findata-fetcher has failed.\n"
+    -- Don't add any "." or newline. The error message is wrapped in parentheses.
+    Turtle.ExitFailure _ -> failIO "findata-fetcher has failed"
