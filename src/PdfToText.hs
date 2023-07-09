@@ -9,8 +9,8 @@ module PdfToText (
 import Control.Exception.Extra (failIO)
 import Control.Foldl.ByteString (ByteString)
 import Control.Monad.IO.Class (MonadIO)
-import Data.Either.Extra (fromEither)
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
 import Turtle (ExitCode (ExitFailure, ExitSuccess))
 import qualified Turtle
@@ -52,15 +52,12 @@ pdftotext mode inputMode outputMode = do
     ExitFailure _ -> failIO $ "pdftotext has failed.\n" <> decodeUtf8 stderr'
     ExitSuccess -> return $ outputModeToReturnType outputMode stdout'
  where
-  fpToText :: Turtle.FilePath -> Text
-  fpToText = fromEither . Turtle.toText
-
   inputModeToInput :: PdfToTextInputMode -> (Text, Turtle.Shell ByteString)
-  inputModeToInput (PttInputModeFilePath fp) = (fpToText fp, mempty)
+  inputModeToInput (PttInputModeFilePath fp) = (T.pack fp, mempty)
   inputModeToInput (PttInputModeStdIn bs) = ("-", bs)
 
   outputModeToArgument :: PdfToTextOutputMode o -> Text
-  outputModeToArgument (PttOutputModeFilePath txtFile) = fpToText txtFile
+  outputModeToArgument (PttOutputModeFilePath txtFile) = T.pack txtFile
   outputModeToArgument PttOutputModeStdOut = "-"
 
   outputModeToReturnType :: PdfToTextOutputMode outputType -> ByteString -> outputType
