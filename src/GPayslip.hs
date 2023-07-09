@@ -8,13 +8,14 @@ import Control.Monad.Cont (MonadIO, liftIO)
 import Control.Monad.Except (MonadError (catchError, throwError), runExceptT)
 import Control.Monad.Managed qualified as Managed
 import Data.Text (Text)
+import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import FindataTranscoder
 import PdfToText (PdfToTextInputMode (..), PdfToTextMode (..), PdfToTextOutputMode (PttOutputModeFilePath, PttOutputModeStdOut), pdftotext)
 import Turtle (Line, Shell, home, (</>), ls)
 import Turtle qualified
 import Turtle.Extra qualified as Turtle
-import Turtle.Extra (decodePathM, emptyLine)
+import Turtle.Extra (emptyLine)
 import Wallet (getWallet, appendTransactionToWallet)
 
 -- | Moves Google Payslip PDF to the main wallet file.
@@ -33,7 +34,7 @@ moveGPayslipToWallet wallet pdf = flip catchError prependContext $ do
   Turtle.rm pdf
  where
   prependContext errMsg = do
-    pdfPath <- decodePathM pdf
+    let pdfPath = T.pack pdf
     throwError $
       "Could not move Google Payslip (" <> pdfPath <> ") to the wallet file.\n" <> errMsg
 
@@ -43,13 +44,13 @@ moveGPayslipToWallet wallet pdf = flip catchError prependContext $ do
   transcode :: (MonadError e m, MonadIO m, e ~ Text) => Turtle.FilePath -> m Text
   transcode pdf' = do
     maybeContent <- liftIO . unsafeRunManaged $ do
-      tmpTxt <- Turtle.mktempfile (Turtle.decodeString "/tmp") ""
+      tmpTxt <- Turtle.mktempfile "/tmp" ""
       maybeSuccess :: (Either Text ()) <-
         runExceptT $
           pdftotext Layout (PttInputModeFilePath pdf') (PttOutputModeFilePath tmpTxt)
       liftIO $
         sequence $
-          T.readFile (Turtle.encodeString tmpTxt) <$ maybeSuccess
+          T.readFile tmpTxt <$ maybeSuccess
     either throwError return maybeContent
 
 -- | Pulls Google Payslips to the wallet.
@@ -58,8 +59,8 @@ moveGPayslipToWallet wallet pdf = flip catchError prependContext $ do
 pullGooglePayslips :: (MonadIO io) => io ()
 pullGooglePayslips = do
   homeDir <- home
-  let payslipSourceDir = homeDir </> Turtle.fromText "Google Drive/My Drive/Payslips"
-  let payslipTargetDir = homeDir </> Turtle.fromText "Documents/Job/Google/Payslips"
+  let payslipSourceDir = homeDir </> T.unpack "Google Drive/My Drive/Payslips"
+  let payslipTargetDir = homeDir </> T.unpack "Documents/Job/Google/Payslips"
   Turtle.reduce Foldl.mconcat $ do
     payslipSource <- ls payslipSourceDir
     let payslipTarget = payslipTargetDir </> Turtle.filename payslipSource

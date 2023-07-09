@@ -22,7 +22,7 @@ parseTextStatements ::
   io ()
 parseTextStatements sourceDir stmtGlobPattern ftSource = Turtle.reduce Foldl.mconcat $ do
   file <- ls sourceDir
-  stmt <- bool Turtle.empty (return file) (match (compile stmtGlobPattern) (Turtle.encodeString $ Turtle.filename file))
+  stmt <- bool Turtle.empty (return file) (match (compile stmtGlobPattern) (Turtle.filename file))
   transaction :: Text <- findataTranscoder ftSource (Turtle.input stmt)
   wallet <- getWallet
   appendTransactionToWallet wallet (Turtle.select $ Turtle.textToPosixLines transaction)

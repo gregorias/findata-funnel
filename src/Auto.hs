@@ -48,7 +48,7 @@ import Wallet (getWalletDir)
 downloads :: (MonadIO io) => io Turtle.FilePath
 downloads = do
   homeDir <- home
-  return $ homeDir </> Turtle.fromText "Downloads"
+  return $ homeDir </> "Downloads"
 
 cdDownloads :: (MonadIO io) => io ()
 cdDownloads = downloads >>= cd
@@ -89,8 +89,8 @@ pullCoopReceipts = do
   textifyCoopPdfReceipts :: IO ()
   textifyCoopPdfReceipts = Turtle.reduce Foldl.mconcat $ do
     cdDownloads
-    file <- ls $ Turtle.fromText "."
-    pdf <- bool Turtle.empty (return file) (match (compile "Coop *.pdf") (Turtle.encodeString file))
+    file <- ls "."
+    pdf <- bool Turtle.empty (return file) (match (compile "Coop *.pdf") file)
     textifyPdf "updates/coop-receipts" pdf
     rm pdf
 

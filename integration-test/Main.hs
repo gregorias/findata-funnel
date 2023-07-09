@@ -41,7 +41,7 @@ gpayslipTest = it "Moves a payslip to a ledger" $ do
     pdfSize <- show <$> Turtle.du gpayslipPdf
     liftIO . putStrLn $ "File length: " <> pdfSize
     moveGPayslipToWallet walletTxt gpayslipPdf
-    walletContent :: Text <- liftIO $ T.readFile (Turtle.encodeString walletTxt)
+    walletContent :: Text <- liftIO $ T.readFile walletTxt
     doesGPayslipExist <- Turtle.testfile gpayslipPdf
     return (walletContent, doesGPayslipExist)
   maybeResults `shouldSatisfy` isRight
@@ -53,11 +53,11 @@ gpayslipTest = it "Moves a payslip to a ledger" $ do
  where
   createTmpPayslipPdf :: (MonadManaged m) => m Turtle.FilePath
   createTmpPayslipPdf = do
-    tmpPdf <- Turtle.mktempfile (Turtle.fromText "/tmp") ""
-    Turtle.cp (Turtle.fromText "integration-test/data/gpayslip.pdf") tmpPdf
+    tmpPdf <- Turtle.mktempfile "/tmp" ""
+    Turtle.cp "integration-test/data/gpayslip.pdf" tmpPdf
     return tmpPdf
   createTmpWalletTxt :: (MonadManaged m) => m Turtle.FilePath
-  createTmpWalletTxt = Turtle.mktempfile (Turtle.fromText "/tmp") ""
+  createTmpWalletTxt = Turtle.mktempfile "/tmp" ""
 
   unsafeRunTest = unsafeRunManaged . runExceptT
 

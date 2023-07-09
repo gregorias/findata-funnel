@@ -5,12 +5,10 @@ module Turtle.Extra (
   lineToPosixLine,
   textToPosixLines,
   posixLinesToText,
-  decodePathM,
   emptyLine,
   textToShell,
 ) where
 
-import Control.Monad.Except (MonadError (throwError))
 import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -39,13 +37,6 @@ posixLinesToText = foldMap posixLineToText
 
 emptyLine :: NonEmpty Turtle.Line
 emptyLine = Turtle.textToLines ""
-
-decodePathM :: (MonadError e m, e ~ Text) => Turtle.FilePath -> m Text
-decodePathM path =
-  either
-    (\e -> throwError $ "Could not decode the path: " <> e <> ".\n")
-    return
-    (Turtle.toText path)
 
 textToShell :: Text -> Turtle.Shell PosixLine
 textToShell = Turtle.select . textToPosixLines

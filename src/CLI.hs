@@ -8,7 +8,6 @@ import Control.Funnel (fetchTranscodeAppend)
 import Control.Monad.Cont (MonadIO, liftIO)
 import Data.Bool (bool)
 import Data.ByteString (ByteString)
-import Data.Either.Extra (fromEither)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8)
@@ -43,7 +42,7 @@ import PdfToText (
  )
 import Splitwise (pullSplitwise)
 import System.FilePath.Glob (compile, match)
-import Turtle (cd, encodeString, fromText, ls, select, toText, (</>))
+import Turtle (cd, ls, select, (</>))
 import Turtle qualified
 import Turtle.Extra (posixLineToLine, textToPosixLines, textToShell)
 import Turtle.Line (textToLines)
@@ -59,7 +58,7 @@ pullBcgeCc = do
     findataTranscoder FindataTranscoderBcgeCc $
       posixLineToLine <$> textToShell textStatement
   walletDir <- getWalletDir
-  let bcgeCcLedger :: FilePath = encodeString $ walletDir </> "updates/bcge-cc.ledger"
+  let bcgeCcLedger :: FilePath = walletDir </> "updates/bcge-cc.ledger"
   liftIO $ T.appendFile bcgeCcLedger ledger
 
 pullCsBrokerageAccount :: (MonadIO m) => m ()
@@ -67,7 +66,7 @@ pullCsBrokerageAccount = do
   csStatement :: Text <- decodeUtf8 <$> runFindataFetcher FFSourceCs
   ledger :: Text <- findataTranscoder FindataTranscoderCs $ posixLineToLine <$> textToShell csStatement
   walletDir <- getWalletDir
-  let csLedger :: FilePath = encodeString $ walletDir </> "updates/charles-schwab.ledger"
+  let csLedger :: FilePath = walletDir </> "updates/charles-schwab.ledger"
   liftIO $ T.appendFile csLedger ledger
 
 pullFinpension :: (MonadIO m) => m ()
@@ -92,10 +91,8 @@ pullMBank = do
   mBankCsv <- runFindataFetcher FFSourceMBank
   mBankLedger <- findataTranscoder FindataTranscoderMBank (textToFindataTranscoderInput mBankCsv)
   mBankLedgerFile <- (</> "updates/mbank.ledger") <$> getWalletDir
-  liftIO $ T.writeFile (filePathToString mBankLedgerFile) mBankLedger
+  liftIO $ T.writeFile mBankLedgerFile mBankLedger
  where
-  filePathToString = T.unpack . fromEither . toText
-
   textToFindataTranscoderInput :: Text -> Turtle.Shell Turtle.Line
   textToFindataTranscoderInput = fmap posixLineToLine . textToShell
 
@@ -106,21 +103,20 @@ pullIB = do
     findataTranscoder FindataTranscoderIBActivity $
       posixLineToLine <$> textToShell ibCsv
   walletDir <- getWalletDir
-  liftIO $ T.appendFile (encodeString $ walletDir </> "updates/ib.ledger") ledger
+  liftIO $ T.appendFile (walletDir </> "updates/ib.ledger") ledger
 
 pullRevolut :: (MonadIO m) => m ()
 pullRevolut = do
   walletDir <- getWalletDir
   let revolutDownloadDir = walletDir </> "updates/revolut"
-  runFindataFetcher (FFSourceRevolut (FindataFetcherRevolutParameters (fromEither $ toText revolutDownloadDir)))
+  runFindataFetcher (FFSourceRevolut (FindataFetcherRevolutParameters (T.pack revolutDownloadDir)))
   cd revolutDownloadDir
   Turtle.reduce Foldl.mconcat $ do
-    file <- ls $ Turtle.fromText "."
-    csv :: Turtle.FilePath <- bool Turtle.empty (return file) (match (compile "*.csv") (Turtle.encodeString file))
-    csvText :: Text <- liftIO $ Turtle.readTextFile csv
+    file <- ls "."
+    csv :: Turtle.FilePath <- bool Turtle.empty (return file) (match (compile "*.csv") file)
+    csvText :: Text <- liftIO $ T.readFile csv
     ledger :: Text <- findataTranscoder FindataTranscoderRevolut (Turtle.select $ textToLines csvText)
-    let csvAsText :: String = T.unpack . fromEither . toText $ csv
-    liftIO $ T.writeFile (csvAsText <> ".ledger") ledger
+    liftIO $ T.writeFile (csv <> ".ledger") ledger
     rm csv
 
 pullSplitwiseFull :: IO ()

@@ -16,7 +16,7 @@ tests = do
     Hspec.describe "appendTransactionToWallet" $ do
       Hspec.it "Appends a transaction prepending a newline." $ do
         with
-          (Turtle.mktempfile (Turtle.decodeString "/tmp") "")
+          (Turtle.mktempfile "/tmp" "")
           ( \tmpTxt -> do
               let transaction =
                     [trimming|
@@ -25,6 +25,6 @@ tests = do
                         Bar -123|]
                       <> "\n"
               appendTransactionToWallet tmpTxt (Turtle.select $ textToPosixLines transaction)
-              walletContent :: Text <- liftIO $ T.readFile (Turtle.encodeString tmpTxt)
+              walletContent :: Text <- liftIO $ T.readFile tmpTxt
               walletContent `Hspec.shouldBe` ("\n" <> transaction)
           )

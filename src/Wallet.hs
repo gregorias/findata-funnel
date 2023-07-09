@@ -6,6 +6,7 @@ module Wallet (
 ) where
 
 import Control.Monad.IO.Class (MonadIO)
+import qualified Data.Text as T
 import Turtle (home, (<&>), (</>))
 import qualified Turtle
 import Turtle.Extra (emptyLine)
@@ -14,7 +15,7 @@ import qualified Turtle.Extra as Turtle
 getWalletDir :: (MonadIO m) => m Turtle.FilePath
 getWalletDir = do
   homeDir <- home
-  return $ homeDir </> Turtle.fromText "Wallet"
+  return $ homeDir </> T.unpack "Wallet"
 
 getWallet :: (MonadIO m) => m Turtle.FilePath
 getWallet = getWalletDir <&> (</> "wallet.txt")
