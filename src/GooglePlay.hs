@@ -11,7 +11,7 @@ import Turtle qualified
 downloads :: (MonadIO io) => io Turtle.FilePath
 downloads = do
   homeDir <- home
-  return $ homeDir </> Turtle.fromText "Downloads"
+  return $ homeDir </> "Downloads"
 
 -- | Pulls Google Play receipts to the wallet.
 --
