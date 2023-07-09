@@ -49,6 +49,9 @@ import Turtle.Line (textToLines)
 import Turtle.Prelude (rm)
 import Wallet (appendTransactionToWallet, getWallet, getWalletDir)
 
+version :: Text
+version = "2.2.0.0"
+
 pullBcgeCc :: (MonadIO m) => m ()
 pullBcgeCc = do
   bcgeCcPdfStatement :: ByteString <- runFindataFetcher FFSourceBcgeCc
@@ -128,7 +131,13 @@ individualPipesP :: Parser (IO ())
 individualPipesP =
   subparser
     ( mconcat
-        [ pullCommand
+        [ command
+            "version"
+            ( info
+                (pure (T.putStrLn version) <**> helper)
+                (progDesc "Prints the version of the program.")
+            )
+        , pullCommand
             "auto"
             ( "Pulls financial data from sources that don't require my involvement.\n"
                 <> "Currently this entails: Coop, EasyRide, Galaxus, Patreon Uber Eats receipts, and Revolut statements sent to gMail.\n"
