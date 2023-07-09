@@ -87,9 +87,7 @@ runFindataFetcher ::
   m output
 runFindataFetcher source = do
   homeDir <- home
-  let ffPath =
-        "Could not convert findata-fetcher path to text.\n"
-          <> T.pack (homeDir </> ".local/bin/findata-fetcher")
+  let ffPath = T.pack (homeDir </> ".local/bin/findata-fetcher")
   (exitCode, stdout) <-
     TurtleB.procStrict
       ffPath
@@ -101,4 +99,3 @@ runFindataFetcher source = do
   case exitCode of
     Turtle.ExitSuccess -> return $ convertTextToOutputType source stdout
     Turtle.ExitFailure _ -> failIO "findata-fetcher has failed.\n"
- where
