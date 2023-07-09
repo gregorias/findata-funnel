@@ -11,13 +11,14 @@ module Auto (
 
 import Control.Concurrent.ParallelIO.Global (parallel)
 import Control.Exception (IOException, catch, throwIO, try)
-import qualified Control.Foldl as Foldl
-import Control.Monad (when)
+import Control.Foldl qualified as Foldl
+import Control.Monad (forM_, unless)
 import Control.Monad.IO.Class (MonadIO)
 import Data.Bool (bool)
-import Data.Either (isRight)
 import Data.Either.Combinators (leftToMaybe)
-import qualified FindataFetcher as FF
+import Data.Text (Text)
+import Data.Text qualified as T
+import FindataFetcher qualified as FF
 import FindataTranscoder (
   FindataTranscoderSource (..),
  )
@@ -31,7 +32,7 @@ import PdfToText (
  )
 import Pipeline (parseTextStatements)
 import System.FilePath.Glob (compile, match)
-import System.IO (hPutStr, hPutStrLn, stderr)
+import System.IO (stderr)
 import Turtle (
   ExitCode (ExitFailure),
   cd,
@@ -42,8 +43,9 @@ import Turtle (
   (<.>),
   (</>),
  )
-import qualified Turtle
+import Turtle qualified
 import Wallet (getWalletDir)
+import qualified Data.Text.IO as T
 
 downloads :: (MonadIO io) => io Turtle.FilePath
 downloads = do
@@ -52,16 +54,6 @@ downloads = do
 
 cdDownloads :: (MonadIO io) => io ()
 cdDownloads = downloads >>= cd
-
-printIOExceptionOnStderr :: String -> IO a -> IO a
-printIOExceptionOnStderr name action =
-  catch
-    action
-    ( \(ioe :: IOException) -> do
-        hPutStrLn stderr $ "Could not execute " <> name
-        hPutStr stderr (show ioe)
-        throwIO ioe
-    )
 
 textifyPdf ::
   (MonadIO m) =>
@@ -131,9 +123,9 @@ pullUberEatsReceipts = do
 -- | Pulls data fully automatically.
 pullAuto :: IO ()
 pullAuto = do
-  pullSuccesses :: [Bool] <-
+  results :: [Either Text ()] <-
     parallel $
-      isIOSuccessful . uncurry printIOExceptionOnStderr
+      uncurry handleException
         <$> [ ("Coop pull", pullCoopReceipts)
             , ("EasyRide pull", pullEasyRideReceipts)
             , ("Galaxus pull", pullGalaxusReceipts)
@@ -142,7 +134,28 @@ pullAuto = do
             , ("Revolut pull", pullRevolutReceipts)
             , ("Uber Eats pull", pullUberEatsReceipts)
             ]
-  when (False `elem` pullSuccesses) (exit (ExitFailure 1))
+  let errMsgs :: [Text] =
+        foldr
+          ( \result acc -> case result of
+              Left errMsg -> errMsg : acc
+              Right _ -> acc
+          )
+          []
+          results
+  unless
+    (null errMsgs)
+    ( do
+        forM_ errMsgs $ \errMsg -> do
+          T.hPutStr stderr errMsg
+          T.hPutStrLn stderr ""
+        exit (ExitFailure 1)
+    )
  where
-  isIOSuccessful :: IO () -> IO Bool
-  isIOSuccessful = fmap isRight . try @IOException
+  handleException :: Text -> IO a -> IO (Either Text a)
+  handleException name action =
+    catch
+      (Right <$> action)
+      ( \(ioe :: IOException) -> do
+          let errMsg = "Could not execute " <> name <> "\n" <> T.pack (show ioe)
+          return (Left errMsg)
+      )
