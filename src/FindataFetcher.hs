@@ -1,8 +1,11 @@
 -- | This module handles using findata-fetcher.
 module FindataFetcher (
-  Source (..),
-  RevolutParameters (..),
   run,
+  Source (..),
+  CoopSupercardParameters (..),
+  CoopSupercardHeadlessMode (..),
+  CoopSupercardVerboseMode (..),
+  RevolutParameters (..),
 ) where
 
 import Control.Exception.Extra (failIO)
@@ -18,7 +21,7 @@ import Turtle.Bytes qualified as TurtleB
 data Source parameters output where
   SourceBcge :: Source () Text
   SourceBcgeCc :: Source () ByteString
-  SourceCoopSupercard :: Source () ()
+  SourceCoopSupercard :: CoopSupercardParameters -> Source CoopSupercardParameters ()
   SourceCs :: Source () ByteString
   SourceDegiroPortfolio :: Source () Text
   SourceEasyRide :: Source () ()
@@ -33,6 +36,15 @@ data Source parameters output where
   SourceSplitwise :: Source () Text
   SourceUberEats :: Source () ()
 
+data CoopSupercardHeadlessMode = CoopSupercardHeadless | CoopSupercardNoHeadless
+
+data CoopSupercardVerboseMode = CoopSupercardVerbose | CoopSupercardQuiet
+
+data CoopSupercardParameters = CoopSupercardParameters
+  { coopSupercardParametersHeadlessMode :: !CoopSupercardHeadlessMode
+  , coopSupercardParametersVerboseMode :: !CoopSupercardVerboseMode
+  }
+
 newtype RevolutParameters = RevolutParameters
   { revolutParametersDownloadDirectory :: Text
   }
@@ -40,7 +52,7 @@ newtype RevolutParameters = RevolutParameters
 sourceToCommand :: Source a b -> Text
 sourceToCommand SourceBcge = "pull-bcge"
 sourceToCommand SourceBcgeCc = "pull-bcgecc"
-sourceToCommand SourceCoopSupercard = "pull-coop-supercard"
+sourceToCommand (SourceCoopSupercard _) = "coop-supercard-pull"
 sourceToCommand SourceCs = "pull-cs-account-history"
 sourceToCommand SourceDegiroPortfolio = "pull-degiro-portfolio"
 sourceToCommand SourceEasyRide = "pull-easyride-receipts"
@@ -56,13 +68,28 @@ sourceToCommand SourceSplitwise = "pull-splitwise"
 sourceToCommand SourceUberEats = "pull-uber-eats"
 
 sourceToParameters :: Source a b -> [Text]
+sourceToParameters
+  ( SourceCoopSupercard
+      ( CoopSupercardParameters
+          { coopSupercardParametersVerboseMode = verboseMode
+          , coopSupercardParametersHeadlessMode = headlessMode
+          }
+        )
+    ) =
+    [ case verboseMode of
+        CoopSupercardVerbose -> "--verbose"
+        CoopSupercardQuiet -> "--quiet"
+    , case headlessMode of
+        CoopSupercardHeadless -> "--headless"
+        CoopSupercardNoHeadless -> "--no-headless"
+    ]
 sourceToParameters (SourceRevolut (RevolutParameters{revolutParametersDownloadDirectory = downloadDirectory})) = ["--download-directory=" <> downloadDirectory]
 sourceToParameters _ = []
 
 convertTextToOutputType :: Source a output -> ByteString -> output
 convertTextToOutputType SourceBcge = decodeUtf8
 convertTextToOutputType SourceBcgeCc = id
-convertTextToOutputType SourceCoopSupercard = const ()
+convertTextToOutputType (SourceCoopSupercard _) = const ()
 convertTextToOutputType SourceCs = id
 convertTextToOutputType SourceDegiroPortfolio = decodeUtf8
 convertTextToOutputType SourceEasyRide = const ()

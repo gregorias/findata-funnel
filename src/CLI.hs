@@ -6,6 +6,7 @@ import Bcge (pullBcge)
 import Control.Foldl qualified as Foldl
 import Control.Funnel (fetchTranscodeAppend)
 import Control.Monad.Cont (MonadIO, liftIO)
+import Coop qualified
 import Data.Bool (bool)
 import Data.ByteString (ByteString)
 import Data.Text (Text)
@@ -147,6 +148,12 @@ individualPipesP =
             "bcge-cc"
             "Pulls BCGE credit card statement data from Internet and saves it in a Ledger file in the wallet directory."
             pullBcgeCc
+        , pullCommand
+            "coop-supercard"
+            "Pulls Coop Supercard receipts and saves it in a Ledger file in the wallet directory."
+            ( Coop.pullCoopSupercardReceipts
+                (FF.CoopSupercardParameters FF.CoopSupercardNoHeadless FF.CoopSupercardVerbose)
+            )
         , pullCommand
             "cs-brokerage-account"
             "Pulls Charles Schwab brokerage account's transaction history from Internet into a Ledger file in the wallet directory."
