@@ -18,6 +18,7 @@ import Data.Bool (bool)
 import Data.Either.Combinators (leftToMaybe)
 import Data.Text (Text)
 import Data.Text qualified as T
+import Data.Text.IO qualified as T
 import FindataFetcher qualified as FF
 import FindataTranscoder (
   FindataTranscoderSource (..),
@@ -45,7 +46,6 @@ import Turtle (
  )
 import Turtle qualified
 import Wallet (getWalletDir)
-import qualified Data.Text.IO as T
 
 downloads :: (MonadIO io) => io Turtle.FilePath
 downloads = do
@@ -74,7 +74,7 @@ pullCoopReceipts :: IO ()
 pullCoopReceipts = do
   -- The coop fetcher often fails, so let's not block textification if that happens.
   ioException :: (Maybe IOException) <-
-    fmap leftToMaybe . try @IOException $ FF.runFindataFetcher FF.FFSourceCoopSupercard
+    fmap leftToMaybe . try @IOException $ FF.run FF.SourceCoopSupercard
   textifyCoopPdfReceipts
   maybe (return ()) throwIO ioException
  where
@@ -91,14 +91,14 @@ pullCoopReceipts = do
 -- Throws an IO exception on failure.
 pullEasyRideReceipts :: IO ()
 pullEasyRideReceipts = do
-  FF.runFindataFetcher FF.FFSourceEasyRide
+  FF.run FF.SourceEasyRide
 
 -- | Pulls Patreon receipts to the wallet.
 --
 -- Throws an IO exception on failure.
 pullPatreonReceipts :: IO ()
 pullPatreonReceipts = do
-  FF.runFindataFetcher FF.FFSourcePatreon
+  FF.run FF.SourcePatreon
   downloadsDir :: Turtle.FilePath <- downloads
   parseTextStatements downloadsDir "patreon_*.txt" FindataTranscoderPatreon
 
@@ -107,7 +107,7 @@ pullPatreonReceipts = do
 -- Throws an IO exception on failure.
 pullRevolutReceipts :: IO ()
 pullRevolutReceipts = do
-  FF.runFindataFetcher FF.FFSourceRevolutMail
+  FF.run FF.SourceRevolutMail
   downloadsDir :: Turtle.FilePath <- downloads
   parseTextStatements downloadsDir "revolut-account-statement*.csv" FindataTranscoderRevolut
 
@@ -116,7 +116,7 @@ pullRevolutReceipts = do
 -- Throws an IO exception on failure.
 pullUberEatsReceipts :: IO ()
 pullUberEatsReceipts = do
-  FF.runFindataFetcher FF.FFSourceUberEats
+  FF.run FF.SourceUberEats
   downloadsDir :: Turtle.FilePath <- downloads
   parseTextStatements downloadsDir "*.ubereats" FindataTranscoderUberEats
 

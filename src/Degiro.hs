@@ -2,9 +2,9 @@ module Degiro (pullDegiroPortfolio) where
 
 import Control.Funnel (fetchTranscodeAppend)
 import Control.Monad.Cont (MonadIO)
-import FindataFetcher (FindataFetcherSource (FFSourceDegiroPortfolio), runFindataFetcher)
+import FindataFetcher qualified as FF
 import FindataTranscoder (FindataTranscoderSource (FindataTranscoderDegiroPortfolio), findataTranscoder)
-import qualified Turtle
+import Turtle qualified
 import Turtle.Extra (
   posixLineToLine,
   textToPosixLines,
@@ -16,7 +16,7 @@ pullDegiroPortfolio :: (MonadIO m) => m ()
 pullDegiroPortfolio = do
   wallet <- getWallet
   fetchTranscodeAppend
-    (runFindataFetcher FFSourceDegiroPortfolio)
+    (FF.run FF.SourceDegiroPortfolio)
     transcodeDegiroPortfolio
     (appendToWallet wallet)
  where

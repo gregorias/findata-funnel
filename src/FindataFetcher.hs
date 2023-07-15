@@ -1,8 +1,8 @@
 -- | This module handles using findata-fetcher.
 module FindataFetcher (
-  FindataFetcherSource (..),
-  FindataFetcherRevolutParameters (..),
-  runFindataFetcher,
+  Source (..),
+  RevolutParameters (..),
+  run,
 ) where
 
 import Control.Exception.Extra (failIO)
@@ -15,83 +15,83 @@ import Turtle (home, (</>))
 import Turtle qualified
 import Turtle.Bytes qualified as TurtleB
 
-data FindataFetcherSource parameters output where
-  FFSourceBcge :: FindataFetcherSource () Text
-  FFSourceBcgeCc :: FindataFetcherSource () ByteString
-  FFSourceCoopSupercard :: FindataFetcherSource () ()
-  FFSourceCs :: FindataFetcherSource () ByteString
-  FFSourceDegiroPortfolio :: FindataFetcherSource () Text
-  FFSourceEasyRide :: FindataFetcherSource () ()
-  FFSourceFinpension :: FindataFetcherSource () Text
-  FFSourceGalaxus :: FindataFetcherSource () ()
-  FFSourceGooglePlay :: FindataFetcherSource () ()
-  FFSourceIB :: FindataFetcherSource () Text
-  FFSourceMBank :: FindataFetcherSource () Text
-  FFSourcePatreon :: FindataFetcherSource () ()
-  FFSourceRevolut :: FindataFetcherRevolutParameters -> FindataFetcherSource FindataFetcherRevolutParameters ()
-  FFSourceRevolutMail :: FindataFetcherSource () ()
-  FFSourceSplitwise :: FindataFetcherSource () Text
-  FFSourceUberEats :: FindataFetcherSource () ()
+data Source parameters output where
+  SourceBcge :: Source () Text
+  SourceBcgeCc :: Source () ByteString
+  SourceCoopSupercard :: Source () ()
+  SourceCs :: Source () ByteString
+  SourceDegiroPortfolio :: Source () Text
+  SourceEasyRide :: Source () ()
+  SourceFinpension :: Source () Text
+  SourceGalaxus :: Source () ()
+  SourceGooglePlay :: Source () ()
+  SourceIB :: Source () Text
+  SourceMBank :: Source () Text
+  SourcePatreon :: Source () ()
+  SourceRevolut :: RevolutParameters -> Source RevolutParameters ()
+  SourceRevolutMail :: Source () ()
+  SourceSplitwise :: Source () Text
+  SourceUberEats :: Source () ()
 
-newtype FindataFetcherRevolutParameters = FindataFetcherRevolutParameters
-  { findataFetcherRevolutParametersDownloadDirectory :: Text
+newtype RevolutParameters = RevolutParameters
+  { revolutParametersDownloadDirectory :: Text
   }
 
-findataFetcherSourceToCommand :: FindataFetcherSource a b -> Text
-findataFetcherSourceToCommand FFSourceBcge = "pull-bcge"
-findataFetcherSourceToCommand FFSourceBcgeCc = "pull-bcgecc"
-findataFetcherSourceToCommand FFSourceCoopSupercard = "pull-coop-supercard"
-findataFetcherSourceToCommand FFSourceCs = "pull-cs-account-history"
-findataFetcherSourceToCommand FFSourceDegiroPortfolio = "pull-degiro-portfolio"
-findataFetcherSourceToCommand FFSourceEasyRide = "pull-easyride-receipts"
-findataFetcherSourceToCommand FFSourceFinpension = "pull-finpension"
-findataFetcherSourceToCommand FFSourceGalaxus = "pull-galaxus"
-findataFetcherSourceToCommand FFSourceGooglePlay = "pull-google-play-mail"
-findataFetcherSourceToCommand FFSourceIB = "ib-pull"
-findataFetcherSourceToCommand FFSourceMBank = "pull-mbank"
-findataFetcherSourceToCommand FFSourcePatreon = "pull-patreon"
-findataFetcherSourceToCommand (FFSourceRevolut _) = "pull-revolut"
-findataFetcherSourceToCommand FFSourceRevolutMail = "pull-revolut-mail"
-findataFetcherSourceToCommand FFSourceSplitwise = "pull-splitwise"
-findataFetcherSourceToCommand FFSourceUberEats = "pull-uber-eats"
+sourceToCommand :: Source a b -> Text
+sourceToCommand SourceBcge = "pull-bcge"
+sourceToCommand SourceBcgeCc = "pull-bcgecc"
+sourceToCommand SourceCoopSupercard = "pull-coop-supercard"
+sourceToCommand SourceCs = "pull-cs-account-history"
+sourceToCommand SourceDegiroPortfolio = "pull-degiro-portfolio"
+sourceToCommand SourceEasyRide = "pull-easyride-receipts"
+sourceToCommand SourceFinpension = "pull-finpension"
+sourceToCommand SourceGalaxus = "pull-galaxus"
+sourceToCommand SourceGooglePlay = "pull-google-play-mail"
+sourceToCommand SourceIB = "ib-pull"
+sourceToCommand SourceMBank = "pull-mbank"
+sourceToCommand SourcePatreon = "pull-patreon"
+sourceToCommand (SourceRevolut _) = "pull-revolut"
+sourceToCommand SourceRevolutMail = "pull-revolut-mail"
+sourceToCommand SourceSplitwise = "pull-splitwise"
+sourceToCommand SourceUberEats = "pull-uber-eats"
 
-sourceToParameters :: FindataFetcherSource a b -> [Text]
-sourceToParameters (FFSourceRevolut (FindataFetcherRevolutParameters{findataFetcherRevolutParametersDownloadDirectory = downloadDirectory})) = ["--download-directory=" <> downloadDirectory]
+sourceToParameters :: Source a b -> [Text]
+sourceToParameters (SourceRevolut (RevolutParameters{revolutParametersDownloadDirectory = downloadDirectory})) = ["--download-directory=" <> downloadDirectory]
 sourceToParameters _ = []
 
-convertTextToOutputType :: FindataFetcherSource a output -> ByteString -> output
-convertTextToOutputType FFSourceBcge = decodeUtf8
-convertTextToOutputType FFSourceBcgeCc = id
-convertTextToOutputType FFSourceCoopSupercard = const ()
-convertTextToOutputType FFSourceCs = id
-convertTextToOutputType FFSourceDegiroPortfolio = decodeUtf8
-convertTextToOutputType FFSourceEasyRide = const ()
-convertTextToOutputType FFSourceFinpension = decodeUtf8
-convertTextToOutputType FFSourceGalaxus = const ()
-convertTextToOutputType FFSourceGooglePlay = const ()
-convertTextToOutputType FFSourceIB = decodeUtf8
-convertTextToOutputType FFSourceMBank = decodeUtf8
-convertTextToOutputType FFSourcePatreon = const ()
-convertTextToOutputType (FFSourceRevolut _) = const ()
-convertTextToOutputType FFSourceRevolutMail = const ()
-convertTextToOutputType FFSourceSplitwise = decodeUtf8
-convertTextToOutputType FFSourceUberEats = const ()
+convertTextToOutputType :: Source a output -> ByteString -> output
+convertTextToOutputType SourceBcge = decodeUtf8
+convertTextToOutputType SourceBcgeCc = id
+convertTextToOutputType SourceCoopSupercard = const ()
+convertTextToOutputType SourceCs = id
+convertTextToOutputType SourceDegiroPortfolio = decodeUtf8
+convertTextToOutputType SourceEasyRide = const ()
+convertTextToOutputType SourceFinpension = decodeUtf8
+convertTextToOutputType SourceGalaxus = const ()
+convertTextToOutputType SourceGooglePlay = const ()
+convertTextToOutputType SourceIB = decodeUtf8
+convertTextToOutputType SourceMBank = decodeUtf8
+convertTextToOutputType SourcePatreon = const ()
+convertTextToOutputType (SourceRevolut _) = const ()
+convertTextToOutputType SourceRevolutMail = const ()
+convertTextToOutputType SourceSplitwise = decodeUtf8
+convertTextToOutputType SourceUberEats = const ()
 
 -- | Runs findata-fetcher
 --
 -- Throws IOException on error.
-runFindataFetcher ::
+run ::
   (MonadIO m) =>
-  FindataFetcherSource parameters output ->
+  Source parameters output ->
   -- The stdout of findata-fetcher
   m output
-runFindataFetcher source = do
+run source = do
   homeDir <- home
   let ffPath = T.pack (homeDir </> ".local/bin/findata-fetcher")
   (exitCode, stdout) <-
     TurtleB.procStrict
       ffPath
-      ( [ findataFetcherSourceToCommand source
+      ( [ sourceToCommand source
         ]
           <> sourceToParameters source
       )

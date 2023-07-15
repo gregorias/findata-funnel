@@ -18,6 +18,6 @@ downloads = do
 -- Throws an IO exception on failure.
 pullGalaxusReceipts :: (MonadIO io) => io ()
 pullGalaxusReceipts = do
-  FF.runFindataFetcher FF.FFSourceGalaxus
+  FF.run FF.SourceGalaxus
   downloadsDir :: Turtle.FilePath <- downloads
   parseTextStatements downloadsDir "*.galaxus" FindataTranscoderGalaxus

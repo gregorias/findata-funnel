@@ -2,8 +2,8 @@ module Bcge (pullBcge) where
 
 import Control.Funnel (fetchTranscodeAppend)
 import Control.Monad.Cont (MonadIO (liftIO))
-import qualified Data.Text.IO as T
-import FindataFetcher (FindataFetcherSource (FFSourceBcge), runFindataFetcher)
+import Data.Text.IO qualified as T
+import FindataFetcher qualified as FF
 import FindataTranscoder (FindataTranscoderSource (FindataTranscoderBcge), findataTranscoder)
 import Turtle ((</>))
 import Turtle.Extra (posixLineToLine, textToShell)
@@ -14,7 +14,7 @@ pullBcge = do
   walletDir <- getWalletDir
   let bcgeLedger :: FilePath = walletDir </> "updates/bcge.ledger"
   fetchTranscodeAppend
-    (runFindataFetcher FFSourceBcge)
+    (FF.run FF.SourceBcge)
     transcodeBcge
     (liftIO . T.appendFile bcgeLedger)
  where

@@ -4,7 +4,7 @@ module Splitwise (pullSplitwise) where
 import Control.Funnel (fetchTranscodeAppend)
 import Control.Monad.IO.Class (MonadIO)
 import Data.Text (Text)
-import FindataFetcher (FindataFetcherSource (FFSourceSplitwise), runFindataFetcher)
+import FindataFetcher qualified as FF
 import FindataTranscoder (
   FindataTranscoderSource (FindataTranscoderSplitwise),
   findataTranscoder,
@@ -15,7 +15,7 @@ import Turtle.Extra (
  )
 
 fetchSplitwise :: (MonadIO m) => m Text
-fetchSplitwise = runFindataFetcher FFSourceSplitwise
+fetchSplitwise = FF.run FF.SourceSplitwise
 
 transcodeSplitwise :: (MonadIO m) => Text -> m Text
 transcodeSplitwise =

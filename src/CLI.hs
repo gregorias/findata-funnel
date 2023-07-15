@@ -13,11 +13,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8)
 import Data.Text.IO qualified as T
 import Degiro (pullDegiroPortfolio)
-import FindataFetcher (
-  FindataFetcherRevolutParameters (FindataFetcherRevolutParameters),
-  FindataFetcherSource (..),
-  runFindataFetcher,
- )
+import FindataFetcher qualified as FF
 import FindataTranscoder (
   FindataTranscoderSource (..),
   findataTranscoder,
@@ -54,7 +50,7 @@ version = "2.4.0.0"
 
 pullBcgeCc :: (MonadIO m) => m ()
 pullBcgeCc = do
-  bcgeCcPdfStatement :: ByteString <- runFindataFetcher FFSourceBcgeCc
+  bcgeCcPdfStatement :: ByteString <- FF.run FF.SourceBcgeCc
   textStatement :: Text <-
     pdftotext Raw (PttInputModeStdIn (return bcgeCcPdfStatement)) PttOutputModeStdOut
   ledger :: Text <-
@@ -66,7 +62,7 @@ pullBcgeCc = do
 
 pullCsBrokerageAccount :: (MonadIO m) => m ()
 pullCsBrokerageAccount = do
-  csStatement :: Text <- decodeUtf8 <$> runFindataFetcher FFSourceCs
+  csStatement :: Text <- decodeUtf8 <$> FF.run FF.SourceCs
   ledger :: Text <- findataTranscoder FindataTranscoderCs $ posixLineToLine <$> textToShell csStatement
   walletDir <- getWalletDir
   let csLedger :: FilePath = walletDir </> "updates/charles-schwab.ledger"
@@ -76,7 +72,7 @@ pullFinpension :: (MonadIO m) => m ()
 pullFinpension = do
   wallet <- getWallet
   fetchTranscodeAppend
-    (runFindataFetcher FFSourceFinpension)
+    (FF.run FF.SourceFinpension)
     transcodeFinpension
     (appendToWallet wallet)
  where
@@ -91,7 +87,7 @@ pullFinpension = do
 
 pullMBank :: (MonadIO m) => m ()
 pullMBank = do
-  mBankCsv <- runFindataFetcher FFSourceMBank
+  mBankCsv <- FF.run FF.SourceMBank
   mBankLedger <- findataTranscoder FindataTranscoderMBank (textToFindataTranscoderInput mBankCsv)
   mBankLedgerFile <- (</> "updates/mbank.ledger") <$> getWalletDir
   liftIO $ T.writeFile mBankLedgerFile mBankLedger
@@ -101,7 +97,7 @@ pullMBank = do
 
 pullIB :: (MonadIO m) => m ()
 pullIB = do
-  ibCsv :: Text <- runFindataFetcher FFSourceIB
+  ibCsv :: Text <- FF.run FF.SourceIB
   ledger :: Text <-
     findataTranscoder FindataTranscoderIBActivity $
       posixLineToLine <$> textToShell ibCsv
@@ -112,7 +108,7 @@ pullRevolut :: (MonadIO m) => m ()
 pullRevolut = do
   walletDir <- getWalletDir
   let revolutDownloadDir = walletDir </> "updates/revolut"
-  runFindataFetcher (FFSourceRevolut (FindataFetcherRevolutParameters (T.pack revolutDownloadDir)))
+  FF.run (FF.SourceRevolut (FF.RevolutParameters (T.pack revolutDownloadDir)))
   cd revolutDownloadDir
   Turtle.reduce Foldl.mconcat $ do
     file <- ls "."

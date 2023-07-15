@@ -18,6 +18,6 @@ downloads = do
 -- Throws an IO exception on failure.
 pullGooglePlayReceipts :: (MonadIO io) => io ()
 pullGooglePlayReceipts = do
-  FF.runFindataFetcher FF.FFSourceGalaxus
+  FF.run FF.SourceGalaxus
   downloadsDir :: Turtle.FilePath <- downloads
   parseTextStatements downloadsDir "Your Google Play*mail" FindataTranscoderGooglePlay
