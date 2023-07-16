@@ -1,8 +1,13 @@
 pre-commit:
-  scripts:
-    "format-changed-hs-files.bash":
-      runner: bash
   commands:
+    hlint:
+      tags: lint
+      glob: "*.hs"
+      run: stack exec hlint {staged_files}
+    fourmolu:
+      tags: style
+      glob: "*.hs"
+      run: fourmolu -o "-XTypeApplications" -i {staged_files} && git add {staged_files}
     unit-tests:
       run: "stack test --ghc-options '-Werror'"
 commit-msg:
