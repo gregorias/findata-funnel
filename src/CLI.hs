@@ -50,7 +50,7 @@ import Turtle.Prelude (rm)
 import Wallet (appendTransactionToWallet, getWallet, getWalletDir)
 
 version :: Text
-version = "2.5.0.1"
+version = "2.6.0.0"
 
 pullBcgeCc :: (MonadIO m) => m ()
 pullBcgeCc = do
