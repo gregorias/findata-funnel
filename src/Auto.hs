@@ -13,7 +13,6 @@ import Control.Concurrent.ParallelIO.Global (parallel)
 import Control.Exception (IOException, catch)
 import Control.Monad (forM_, unless)
 import Control.Monad.IO.Class (MonadIO)
-import Coop qualified
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
@@ -78,8 +77,7 @@ pullAuto = do
   results :: [Either Text ()] <-
     parallel $
       uncurry handleException
-        <$> [ ("Coop pull", Coop.pullCoopSupercardReceipts (FF.CoopSupercardParameters FF.CoopSupercardHeadless FF.CoopSupercardQuiet))
-            , ("EasyRide pull", pullEasyRideReceipts)
+        <$> [ ("EasyRide pull", pullEasyRideReceipts)
             , ("Galaxus pull", pullGalaxusReceipts)
             , ("Google Play pull", pullGooglePlayReceipts)
             , ("Patreon pull", pullPatreonReceipts)
