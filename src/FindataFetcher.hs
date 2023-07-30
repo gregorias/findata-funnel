@@ -23,6 +23,7 @@ data Source parameters output where
   SourceBcgeCc :: Source () ByteString
   SourceCoopSupercard :: CoopSupercardParameters -> Source CoopSupercardParameters ()
   SourceCs :: Source () ByteString
+  SourceDegiroAccountStatement :: Source () Text
   SourceDegiroPortfolio :: Source () Text
   SourceEasyRide :: Source () ()
   SourceFinpension :: Source () Text
@@ -54,6 +55,7 @@ sourceToCommand SourceBcge = "pull-bcge"
 sourceToCommand SourceBcgeCc = "pull-bcgecc"
 sourceToCommand (SourceCoopSupercard _) = "coop-supercard-pull"
 sourceToCommand SourceCs = "pull-cs-account-history"
+sourceToCommand SourceDegiroAccountStatement = "pull-degiro-account"
 sourceToCommand SourceDegiroPortfolio = "pull-degiro-portfolio"
 sourceToCommand SourceEasyRide = "pull-easyride-receipts"
 sourceToCommand SourceFinpension = "pull-finpension"
@@ -91,6 +93,7 @@ convertTextToOutputType SourceBcge = decodeUtf8
 convertTextToOutputType SourceBcgeCc = id
 convertTextToOutputType (SourceCoopSupercard _) = const ()
 convertTextToOutputType SourceCs = id
+convertTextToOutputType SourceDegiroAccountStatement = decodeUtf8
 convertTextToOutputType SourceDegiroPortfolio = decodeUtf8
 convertTextToOutputType SourceEasyRide = const ()
 convertTextToOutputType SourceFinpension = decodeUtf8

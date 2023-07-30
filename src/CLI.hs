@@ -13,7 +13,10 @@ import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8)
 import Data.Text.IO qualified as T
-import Degiro (pullDegiroPortfolio)
+import Degiro (
+  pullDegiroAccountStatement,
+  pullDegiroPortfolio,
+ )
 import FindataFetcher qualified as FF
 import FindataTranscoder (
   FindataTranscoderSource (..),
@@ -158,6 +161,10 @@ individualPipesP =
             "cs-brokerage-account"
             "Pulls Charles Schwab brokerage account's transaction history from Internet into a Ledger file in the wallet directory."
             pullCsBrokerageAccount
+        , pullCommand
+            "degiro-account-statement"
+            "Pulls Degiro account statement and appends it to the wallet."
+            pullDegiroAccountStatement
         , pullCommand
             "degiro-portfolio"
             "Pulls Degiro portfolio status data from Internet and appends it to the wallet."
