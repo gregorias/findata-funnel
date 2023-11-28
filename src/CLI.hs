@@ -73,7 +73,18 @@ pullCsBrokerageAccount = do
       posixLineToLine
         <$> textToShell csStatement
   walletDir <- getWalletDir
-  let csLedger :: FilePath = walletDir </> "updates/charles-schwab.ledger"
+  let csLedger :: FilePath = walletDir </> "updates/charles-schwab-brokerage.ledger"
+  liftIO $ T.appendFile csLedger ledger
+
+pullCsEacAccount :: (MonadIO m) => m ()
+pullCsEacAccount = do
+  csStatement :: Text <- decodeUtf8 <$> FF.run FF.SourceCsEacHistory
+  ledger :: Text <-
+    findataTranscoder FindataTranscoderCsEacAccount $
+      posixLineToLine
+        <$> textToShell csStatement
+  walletDir <- getWalletDir
+  let csLedger :: FilePath = walletDir </> "updates/charles-schwab-eac.ledger"
   liftIO $ T.appendFile csLedger ledger
 
 pullFinpension :: (MonadIO m) => m ()
@@ -164,8 +175,12 @@ individualPipesP =
             )
         , pullCommand
             "cs-brokerage-account"
-            "Pulls Charles Schwab brokerage account's transaction history from Internet into a Ledger file in the wallet directory."
+            "Pulls Charles Schwab brokerage account's transaction history into a Ledger file in the wallet directory."
             pullCsBrokerageAccount
+        , pullCommand
+            "cs-eac-account"
+            "Pulls Charles Schwab EAC account's transaction history into a Ledger file in the wallet directory."
+            pullCsEacAccount
         , pullCommand
             "degiro-account-statement"
             "Pulls Degiro account statement and appends it to the wallet."
