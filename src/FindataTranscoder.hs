@@ -7,12 +7,13 @@ module FindataTranscoder (
 import Control.Exception.Extra (failIO)
 import Control.Monad.IO.Class (MonadIO)
 import Data.Text (Text)
-import qualified Turtle
+import Turtle qualified
 
 data FindataTranscoderSource
   = FindataTranscoderBcge
   | FindataTranscoderBcgeCc
-  | FindataTranscoderCs
+  | FindataTranscoderCsBrokerageAccount
+  | FindataTranscoderCsEacAccount
   | FindataTranscoderDegiroAccount
   | FindataTranscoderDegiroPortfolio
   | FindataTranscoderFinpension
@@ -29,7 +30,8 @@ data FindataTranscoderSource
 findataTranscoderSourceToCommand :: FindataTranscoderSource -> Text
 findataTranscoderSourceToCommand FindataTranscoderBcge = "parse-bcge"
 findataTranscoderSourceToCommand FindataTranscoderBcgeCc = "parse-bcge-cc"
-findataTranscoderSourceToCommand FindataTranscoderCs = "parse-cs"
+findataTranscoderSourceToCommand FindataTranscoderCsBrokerageAccount = "parse-cs-brokerage-account"
+findataTranscoderSourceToCommand FindataTranscoderCsEacAccount = "parse-cs-eac-account"
 findataTranscoderSourceToCommand FindataTranscoderDegiroAccount = "parse-degiro-account"
 findataTranscoderSourceToCommand FindataTranscoderDegiroPortfolio = "parse-degiro-portfolio"
 findataTranscoderSourceToCommand FindataTranscoderFinpension = "parse-finpension"

@@ -22,7 +22,8 @@ data Source parameters output where
   SourceBcge :: Source () Text
   SourceBcgeCc :: Source () ByteString
   SourceCoopSupercard :: CoopSupercardParameters -> Source CoopSupercardParameters ()
-  SourceCs :: Source () ByteString
+  SourceCsBrokerageHistory :: Source () ByteString
+  SourceCsEacHistory :: Source () ByteString
   SourceDegiroAccountStatement :: Source () Text
   SourceDegiroPortfolio :: Source () Text
   SourceEasyRide :: Source () ()
@@ -54,7 +55,8 @@ sourceToCommand :: Source a b -> Text
 sourceToCommand SourceBcge = "pull-bcge"
 sourceToCommand SourceBcgeCc = "pull-bcgecc"
 sourceToCommand (SourceCoopSupercard _) = "coop-supercard-pull"
-sourceToCommand SourceCs = "pull-cs-account-history"
+sourceToCommand SourceCsBrokerageHistory = "pull-cs-account-history"
+sourceToCommand SourceCsEacHistory = "pull-cs-eac-history"
 sourceToCommand SourceDegiroAccountStatement = "pull-degiro-account"
 sourceToCommand SourceDegiroPortfolio = "pull-degiro-portfolio"
 sourceToCommand SourceEasyRide = "pull-easyride-receipts"
@@ -92,7 +94,8 @@ convertTextToOutputType :: Source a output -> ByteString -> output
 convertTextToOutputType SourceBcge = decodeUtf8
 convertTextToOutputType SourceBcgeCc = id
 convertTextToOutputType (SourceCoopSupercard _) = const ()
-convertTextToOutputType SourceCs = id
+convertTextToOutputType SourceCsBrokerageHistory = id
+convertTextToOutputType SourceCsEacHistory = id
 convertTextToOutputType SourceDegiroAccountStatement = decodeUtf8
 convertTextToOutputType SourceDegiroPortfolio = decodeUtf8
 convertTextToOutputType SourceEasyRide = const ()

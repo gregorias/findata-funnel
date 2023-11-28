@@ -59,15 +59,19 @@ pullBcgeCc = do
     pdftotext Raw (PttInputModeStdIn (return bcgeCcPdfStatement)) PttOutputModeStdOut
   ledger :: Text <-
     findataTranscoder FindataTranscoderBcgeCc $
-      posixLineToLine <$> textToShell textStatement
+      posixLineToLine
+        <$> textToShell textStatement
   walletDir <- getWalletDir
   let bcgeCcLedger :: FilePath = walletDir </> "updates/bcge-cc.ledger"
   liftIO $ T.appendFile bcgeCcLedger ledger
 
 pullCsBrokerageAccount :: (MonadIO m) => m ()
 pullCsBrokerageAccount = do
-  csStatement :: Text <- decodeUtf8 <$> FF.run FF.SourceCs
-  ledger :: Text <- findataTranscoder FindataTranscoderCs $ posixLineToLine <$> textToShell csStatement
+  csStatement :: Text <- decodeUtf8 <$> FF.run FF.SourceCsBrokerageHistory
+  ledger :: Text <-
+    findataTranscoder FindataTranscoderCsBrokerageAccount $
+      posixLineToLine
+        <$> textToShell csStatement
   walletDir <- getWalletDir
   let csLedger :: FilePath = walletDir </> "updates/charles-schwab.ledger"
   liftIO $ T.appendFile csLedger ledger
@@ -104,7 +108,8 @@ pullIB = do
   ibCsv :: Text <- FF.run FF.SourceIB
   ledger :: Text <-
     findataTranscoder FindataTranscoderIBActivity $
-      posixLineToLine <$> textToShell ibCsv
+      posixLineToLine
+        <$> textToShell ibCsv
   walletDir <- getWalletDir
   liftIO $ T.appendFile (walletDir </> "updates/ib.ledger") ledger
 
