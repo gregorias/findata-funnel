@@ -12,7 +12,7 @@ or begin
   exit 0
 end
 
-echo "Bump up the new version in src/CLI.hs and package.yaml. Once done, confirm [y/n]":
+echo "Bump up the new version in package.yaml. Once done, confirm [y/n]":
 read confirm
 switch $confirm
     case y
