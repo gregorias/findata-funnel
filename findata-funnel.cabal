@@ -7,11 +7,12 @@ cabal-version: 1.12
 name:           findata-funnel
 version:        2.8.0.0
 description:    Please see the README on GitHub at <https://github.com/gregorias/findata-funnel#readme>
+category:       Finance
 homepage:       https://github.com/gregorias/findata-funnel#readme
 bug-reports:    https://github.com/gregorias/findata-funnel/issues
 author:         Grzegorz Milka
 maintainer:     grzegorzmilka@gmail.com
-copyright:      Copyright (c) 2021-2022 Grzegorz Milka
+copyright:      Copyright (c) 2021-2023 Grzegorz Milka
 license:        AGPL-3
 license-file:   LICENSE
 build-type:     Simple
@@ -46,11 +47,23 @@ library
   hs-source-dirs:
       src
   default-extensions:
-      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NumericUnderscores OverloadedLabels OverloadedLists OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
-  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wunused-packages
+      DataKinds
+      DerivingStrategies
+      DerivingVia
+      DuplicateRecordFields
+      FunctionalDependencies
+      GADTs
+      LambdaCase
+      MultiWayIf
+      OverloadedLabels
+      OverloadedStrings
+      QuasiQuotes
+      TypeFamilies
+      TypeOperators
+  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -Wunused-packages
   build-depends:
       Glob
-    , base >=4.13 && <5
+    , base >=4.14 && <5
     , bytestring
     , either
     , extra
@@ -61,7 +74,7 @@ library
     , parallel-io
     , text
     , turtle
-  default-language: Haskell2010
+  default-language: GHC2021
 
 executable findata-funnel
   main-is: Main.hs
@@ -70,13 +83,25 @@ executable findata-funnel
   hs-source-dirs:
       app
   default-extensions:
-      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NumericUnderscores OverloadedLabels OverloadedLists OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
-  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -Wunused-packages
+      DataKinds
+      DerivingStrategies
+      DerivingVia
+      DuplicateRecordFields
+      FunctionalDependencies
+      GADTs
+      LambdaCase
+      MultiWayIf
+      OverloadedLabels
+      OverloadedStrings
+      QuasiQuotes
+      TypeFamilies
+      TypeOperators
+  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N -Wunused-packages
   build-depends:
-      base >=4.13 && <5
+      base >=4.14 && <5
     , findata-funnel
     , optparse-applicative
-  default-language: Haskell2010
+  default-language: GHC2021
 
 test-suite findata-funnel-test
   type: exitcode-stdio-1.0
@@ -88,10 +113,22 @@ test-suite findata-funnel-test
   hs-source-dirs:
       test
   default-extensions:
-      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NumericUnderscores OverloadedLabels OverloadedLists OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
-  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -Wunused-packages
+      DataKinds
+      DerivingStrategies
+      DerivingVia
+      DuplicateRecordFields
+      FunctionalDependencies
+      GADTs
+      LambdaCase
+      MultiWayIf
+      OverloadedLabels
+      OverloadedStrings
+      QuasiQuotes
+      TypeFamilies
+      TypeOperators
+  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N -Wunused-packages
   build-depends:
-      base >=4.13 && <5
+      base >=4.14 && <5
     , findata-funnel
     , foldl
     , hspec
@@ -99,7 +136,7 @@ test-suite findata-funnel-test
     , neat-interpolation
     , text
     , turtle
-  default-language: Haskell2010
+  default-language: GHC2021
 
 test-suite integration-test
   type: exitcode-stdio-1.0
@@ -109,14 +146,26 @@ test-suite integration-test
   hs-source-dirs:
       integration-test
   default-extensions:
-      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NumericUnderscores OverloadedLabels OverloadedLists OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
-  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -Wunused-packages
+      DataKinds
+      DerivingStrategies
+      DerivingVia
+      DuplicateRecordFields
+      FunctionalDependencies
+      GADTs
+      LambdaCase
+      MultiWayIf
+      OverloadedLabels
+      OverloadedStrings
+      QuasiQuotes
+      TypeFamilies
+      TypeOperators
+  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N -Wunused-packages
   build-depends:
-      base >=4.13 && <5
+      base >=4.14 && <5
     , findata-funnel
     , hspec
     , managed
     , mtl
     , text
     , turtle
-  default-language: Haskell2010
+  default-language: GHC2021

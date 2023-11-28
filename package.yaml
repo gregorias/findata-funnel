@@ -1,64 +1,51 @@
-name:                findata-funnel
-version:             2.8.0.0
-github:              "gregorias/findata-funnel"
-license:             AGPL-3
-author:              "Grzegorz Milka"
-maintainer:          "grzegorzmilka@gmail.com"
-copyright:           "Copyright (c) 2021-2022 Grzegorz Milka"
+name: findata-funnel
+version: 2.8.0.0
+github: "gregorias/findata-funnel"
+license: AGPL-3
+author: "Grzegorz Milka"
+maintainer: "grzegorzmilka@gmail.com"
+copyright: "Copyright (c) 2021-2023 Grzegorz Milka"
 
 extra-source-files:
-- README.md
+  - README.md
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
-# category:            Web
+category: Finance
 
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/gregorias/findata-funnel#readme>
-
-# Some defaults recommended by https://kowainik.github.io/posts/2019-02-06-style-guide#default-extensions
-default-extensions:
-  BangPatterns
-  DataKinds
-  DeriveDataTypeable
-  DeriveFoldable
-  DeriveFunctor
-  DeriveGeneric
-  DeriveTraversable
-  DerivingStrategies
-  DerivingVia
-  FlexibleContexts
-  FlexibleInstances
-  FunctionalDependencies
-  GADTs
-  GeneralisedNewtypeDeriving
-  ImportQualifiedPost
-  InstanceSigs
-  LambdaCase
-  MultiParamTypeClasses
-  MultiWayIf
-  NumericUnderscores
-  OverloadedLabels
-  OverloadedLists
-  OverloadedStrings
-  PatternSynonyms
-  QuasiQuotes
-  ScopedTypeVariables
-  StandaloneDeriving
-  TupleSections
-  TypeApplications
-  TypeFamilies
-  TypeOperators
-  UnicodeSyntax
-  ViewPatterns
+description: Please see the README on GitHub at <https://github.com/gregorias/findata-funnel#readme>
 
 dependencies:
-- base >= 4.13 && < 5
+  - base >= 4.14 && < 5
+
+language: GHC2021
+
+# Some defaults recommended by https://kowainik.github.io/posts/2019-02-06-style-guide#default-extensions
+# Also use Relude
+default-extensions:
+  - DataKinds
+  - DerivingStrategies
+  - DerivingVia
+  - DuplicateRecordFields
+  - FunctionalDependencies
+  - GADTs
+  - LambdaCase
+  - MultiWayIf
+  - OverloadedLabels
+  - OverloadedStrings
+  - QuasiQuotes
+  - TypeFamilies
+  - TypeOperators
 
 # no-type-defaults, this is dangerous, but in terms of convenience it's so
 # useful to use ExtendedDefaultRules that I keep it.
+#
+# no-name-shadowing: Name shadowing is potentially dangerous, but not having it
+# forces me to figure out alternative names, which can make code less readable.
+# Overall, I think it's worth the trade off to enable name shadowing.
 ghc-options:
   - -Wall
   - -Werror
@@ -72,67 +59,68 @@ ghc-options:
   - -Wredundant-constraints
   - -Wno-type-defaults
   - -Wno-partial-type-signatures
+  - -Wno-name-shadowing
 
 library:
   source-dirs: src
   ghc-options:
-  - -Wunused-packages
+    - -Wunused-packages
   dependencies:
-  - bytestring
-  - either
-  - extra
-  - foldl
-  - Glob
-  - managed
-  - mtl
-  - optparse-applicative
-  - parallel-io
-  - text
-  - turtle
+    - bytestring
+    - either
+    - extra
+    - foldl
+    - Glob
+    - managed
+    - mtl
+    - optparse-applicative
+    - parallel-io
+    - text
+    - turtle
 
 executables:
   findata-funnel:
-    main:                Main.hs
-    source-dirs:         app
+    main: Main.hs
+    source-dirs: app
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    - -Wunused-packages
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -Wunused-packages
     dependencies:
-    - findata-funnel
-    - optparse-applicative
+      - findata-funnel
+      - optparse-applicative
 
 tests:
   findata-funnel-test:
-    main:                Main.hs
-    source-dirs:         test
+    main: Main.hs
+    source-dirs: test
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    - -Wunused-packages
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -Wunused-packages
     dependencies:
-    - findata-funnel
-    - foldl
-    - hspec
-    - managed
-    - neat-interpolation
-    - text
-    - turtle
+      - findata-funnel
+      - foldl
+      - hspec
+      - managed
+      - neat-interpolation
+      - text
+      - turtle
 
   integration-test:
-    main:                Main.hs
-    source-dirs:         integration-test
+    main: Main.hs
+    source-dirs: integration-test
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    - -Wunused-packages
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -Wunused-packages
     dependencies:
-    - findata-funnel
-    - hspec
-    - managed
-    - mtl
-    - text
-    - turtle
+      - findata-funnel
+      - hspec
+      - managed
+      - mtl
+      - text
+      - turtle
