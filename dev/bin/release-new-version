@@ -3,7 +3,7 @@
 # This script releases a new version of the project.
 
 function get-version
-    stack run findata-funnel version
+    stack run -- --version
 end
 
 set OLD_VERSION (get-version)
@@ -23,9 +23,9 @@ switch $confirm
 end
 set NEW_VERSION (get-version)
 and echo "New version: $NEW_VERSION."
-git add src/CLI.hs package.yaml
+git add package.yaml
 and echo "Rebuilding to update findata-funnel.cabal."
-and stack build --fast
+and stack build
 and git add findata-funnel.cabal
 and echo "Committing the new version."
 and git commit -m 'chore: release'
