@@ -30,8 +30,8 @@ data FindataTranscoderSource
 findataTranscoderSourceToCommand :: FindataTranscoderSource -> Text
 findataTranscoderSourceToCommand FindataTranscoderBcge = "parse-bcge"
 findataTranscoderSourceToCommand FindataTranscoderBcgeCc = "parse-bcge-cc"
-findataTranscoderSourceToCommand FindataTranscoderCsBrokerageAccount = "parse-cs-brokerage-account"
-findataTranscoderSourceToCommand FindataTranscoderCsEacAccount = "parse-cs-eac-account"
+findataTranscoderSourceToCommand FindataTranscoderCsBrokerageAccount = "parse-cs-brokerage-account-history"
+findataTranscoderSourceToCommand FindataTranscoderCsEacAccount = "parse-cs-eac-history"
 findataTranscoderSourceToCommand FindataTranscoderDegiroAccount = "parse-degiro-account"
 findataTranscoderSourceToCommand FindataTranscoderDegiroPortfolio = "parse-degiro-portfolio"
 findataTranscoderSourceToCommand FindataTranscoderFinpension = "parse-finpension"
