@@ -53,15 +53,6 @@ pullPatreonReceipts = do
   downloadsDir :: Turtle.FilePath <- downloads
   parseTextStatements downloadsDir "patreon_*.txt" FindataTranscoderPatreon
 
--- | Pulls Revolut receipts to the wallet.
---
--- Throws an IO exception on failure.
-pullRevolutReceipts :: IO ()
-pullRevolutReceipts = do
-  FF.run FF.SourceRevolutMail
-  downloadsDir :: Turtle.FilePath <- downloads
-  parseTextStatements downloadsDir "revolut-account-statement*.csv" FindataTranscoderRevolut
-
 -- | Pulls Uber Eats receipts to the wallet.
 --
 -- Throws an IO exception on failure.
@@ -81,7 +72,6 @@ pullAuto = do
             , ("Galaxus pull", pullGalaxusReceipts)
             , ("Google Play pull", pullGooglePlayReceipts)
             , ("Patreon pull", pullPatreonReceipts)
-            , ("Revolut pull", pullRevolutReceipts)
             , ("Uber Eats pull", pullUberEatsReceipts)
             ]
   let errMsgs :: [Text] =

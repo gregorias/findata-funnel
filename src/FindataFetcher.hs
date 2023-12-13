@@ -34,7 +34,6 @@ data Source parameters output where
   SourceMBank :: Source () Text
   SourcePatreon :: Source () ()
   SourceRevolut :: RevolutParameters -> Source RevolutParameters ()
-  SourceRevolutMail :: Source () ()
   SourceSplitwise :: Source () Text
   SourceUberEats :: Source () ()
 
@@ -66,8 +65,7 @@ sourceToCommand SourceGooglePlay = "pull-google-play-mail"
 sourceToCommand SourceIB = "ib-pull"
 sourceToCommand SourceMBank = "pull-mbank"
 sourceToCommand SourcePatreon = "pull-patreon"
-sourceToCommand (SourceRevolut _) = "pull-revolut"
-sourceToCommand SourceRevolutMail = "pull-revolut-mail"
+sourceToCommand (SourceRevolut _) = "revolut-pull"
 sourceToCommand SourceSplitwise = "pull-splitwise"
 sourceToCommand SourceUberEats = "pull-uber-eats"
 
@@ -106,7 +104,6 @@ convertTextToOutputType SourceIB = decodeUtf8
 convertTextToOutputType SourceMBank = decodeUtf8
 convertTextToOutputType SourcePatreon = const ()
 convertTextToOutputType (SourceRevolut _) = const ()
-convertTextToOutputType SourceRevolutMail = const ()
 convertTextToOutputType SourceSplitwise = decodeUtf8
 convertTextToOutputType SourceUberEats = const ()
 
