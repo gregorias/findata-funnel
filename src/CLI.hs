@@ -113,7 +113,7 @@ pullMBank = do
 
 pullIB :: (MonadIO m) => m ()
 pullIB = do
-  ibCsv :: Text <- FF.run FF.SourceIB
+  ibCsv :: Text <- FF.run FF.SourceIbActivity
   ledger :: Text <-
     findataTranscoder FindataTranscoderIBActivity $
       posixLineToLine

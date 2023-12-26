@@ -30,7 +30,7 @@ data Source parameters output where
   SourceFinpension :: Source () Text
   SourceGalaxus :: Source () ()
   SourceGooglePlay :: Source () ()
-  SourceIB :: Source () Text
+  SourceIbActivity :: Source () Text
   SourceMBank :: Source () Text
   SourcePatreon :: Source () ()
   SourceRevolut :: RevolutParameters -> Source RevolutParameters ()
@@ -62,7 +62,7 @@ sourceToCommand SourceEasyRide = "pull-easyride-receipts"
 sourceToCommand SourceFinpension = "pull-finpension"
 sourceToCommand SourceGalaxus = "pull-galaxus"
 sourceToCommand SourceGooglePlay = "pull-google-play-mail"
-sourceToCommand SourceIB = "ib-pull"
+sourceToCommand SourceIbActivity = "ib-activity-pull"
 sourceToCommand SourceMBank = "pull-mbank"
 sourceToCommand SourcePatreon = "pull-patreon"
 sourceToCommand (SourceRevolut _) = "revolut-pull"
@@ -100,7 +100,7 @@ convertTextToOutputType SourceEasyRide = const ()
 convertTextToOutputType SourceFinpension = decodeUtf8
 convertTextToOutputType SourceGalaxus = const ()
 convertTextToOutputType SourceGooglePlay = const ()
-convertTextToOutputType SourceIB = decodeUtf8
+convertTextToOutputType SourceIbActivity = decodeUtf8
 convertTextToOutputType SourceMBank = decodeUtf8
 convertTextToOutputType SourcePatreon = const ()
 convertTextToOutputType (SourceRevolut _) = const ()
