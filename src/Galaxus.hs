@@ -1,7 +1,7 @@
 -- Pulls Galaxus receipts to the wallet.
 module Galaxus (pullGalaxusReceipts) where
 
-import Control.Monad.Cont (MonadIO)
+import Control.Monad.IO.Class (MonadIO)
 import FindataFetcher qualified as FF
 import FindataTranscoder (FindataTranscoderSource (..))
 import Pipeline (parseTextStatements)

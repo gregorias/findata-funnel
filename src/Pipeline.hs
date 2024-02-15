@@ -1,14 +1,14 @@
 module Pipeline (parseTextStatements) where
 
-import qualified Control.Foldl as Foldl
-import Control.Monad.Cont (MonadIO)
+import Control.Foldl qualified as Foldl
+import Control.Monad.IO.Class (MonadIO)
 import Data.Bool (bool)
 import Data.Text (Text)
 import FindataTranscoder (FindataTranscoderSource, findataTranscoder)
 import System.FilePath.Glob (compile, match)
 import Turtle (ls, rm)
-import qualified Turtle
-import qualified Turtle.Extra as Turtle
+import Turtle qualified
+import Turtle.Extra qualified as Turtle
 import Wallet (appendTransactionToWallet, getWallet)
 
 -- | Parses all text statements in a directory, appends them to a wallet, and deletes the source.

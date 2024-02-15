@@ -4,19 +4,19 @@ module GPayslip (
 ) where
 
 import Control.Foldl qualified as Foldl
-import Control.Monad.Cont (MonadIO, liftIO)
 import Control.Monad.Except (MonadError (catchError, throwError), runExceptT)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Managed qualified as Managed
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import FindataTranscoder
 import PdfToText (PdfToTextInputMode (..), PdfToTextMode (..), PdfToTextOutputMode (PttOutputModeFilePath, PttOutputModeStdOut), pdftotext)
-import Turtle (Line, Shell, home, (</>), ls)
+import Turtle (Line, Shell, home, ls, (</>))
 import Turtle qualified
-import Turtle.Extra qualified as Turtle
 import Turtle.Extra (emptyLine)
-import Wallet (getWallet, appendTransactionToWallet)
+import Turtle.Extra qualified as Turtle
+import Wallet (appendTransactionToWallet, getWallet)
 
 -- | Moves Google Payslip PDF to the main wallet file.
 moveGPayslipToWallet ::

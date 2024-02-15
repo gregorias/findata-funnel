@@ -8,7 +8,7 @@ module Coop (
 
 import Control.Exception.Base
 import Control.Foldl qualified as Foldl
-import Control.Monad.Cont (MonadIO, liftIO)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Bool (bool)
 import Data.Either.Combinators (leftToMaybe)
 import FindataFetcher qualified as FF

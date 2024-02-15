@@ -5,7 +5,7 @@ import Auto (pullAuto)
 import Bcge (pullBcge)
 import Control.Foldl qualified as Foldl
 import Control.Funnel (fetchTranscodeAppend)
-import Control.Monad.Cont (MonadIO, liftIO)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Coop qualified
 import Data.Bool (bool)
 import Data.ByteString (ByteString)

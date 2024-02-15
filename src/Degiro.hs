@@ -4,7 +4,7 @@ module Degiro (
 ) where
 
 import Control.Funnel (fetchTranscodeAppend)
-import Control.Monad.Cont (MonadIO)
+import Control.Monad.IO.Class (MonadIO)
 import Data.Text (Text)
 import FindataFetcher qualified as FF
 import FindataTranscoder (
