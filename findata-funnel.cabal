@@ -1,18 +1,19 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
 name:           findata-funnel
-version:        2.15.0.0
+version:        2.15.0.1
+synopsis:       Combine Findata tools into e2e pipelines.
 description:    Please see the README on GitHub at <https://github.com/gregorias/findata-funnel#readme>
 category:       Finance
 homepage:       https://github.com/gregorias/findata-funnel#readme
 bug-reports:    https://github.com/gregorias/findata-funnel/issues
 author:         Grzegorz Milka
 maintainer:     grzegorzmilka@gmail.com
-copyright:      Copyright (c) 2021-2023 Grzegorz Milka
+copyright:      2021-2024 Grzegorz Milka
 license:        AGPL-3
 license-file:   LICENSE
 build-type:     Simple
@@ -64,7 +65,7 @@ library
   ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -Wunused-packages
   build-depends:
       Glob
-    , base >=4.14 && <5
+    , base >=4.18 && <5
     , bytestring
     , either
     , extra
@@ -100,7 +101,7 @@ executable findata-funnel
       TypeOperators
   ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N -Wunused-packages
   build-depends:
-      base >=4.14 && <5
+      base >=4.18 && <5
     , findata-funnel
     , optparse-applicative
   default-language: GHC2021
@@ -131,7 +132,7 @@ test-suite findata-funnel-test
       TypeOperators
   ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N -Wunused-packages
   build-depends:
-      base >=4.14 && <5
+      base >=4.18 && <5
     , findata-funnel
     , foldl
     , hspec
@@ -165,7 +166,7 @@ test-suite integration-test
       TypeOperators
   ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N -Wunused-packages
   build-depends:
-      base >=4.14 && <5
+      base >=4.18 && <5
     , findata-funnel
     , hspec
     , managed

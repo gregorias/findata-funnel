@@ -1,5 +1,10 @@
 pre-commit:
   commands:
+    hpack:
+      glob: "package.yaml"
+      run: >-
+        hpack
+        && git add findata-funnel.cabal
     hlint:
       tags: lint
       glob: "*.hs"
@@ -11,19 +16,19 @@ pre-commit:
         fourmolu -o "-XTypeApplications"
         -o "-XImportQualifiedPost"
         -i {staged_files}
-        && git add {staged_files}
-    prettier:
-      tags: style
-      glob: "*.{yml,yaml}"
-      run: prettier -c {staged_files}
+      stage_fixed: true
     markdownlint:
       tags: documentation style
       files: git diff --name-only --cached --diff-filter=AM
       glob: "*.md"
       run: markdownlint {files}
+    prettier:
+      tags: style
+      glob: "*.{yml,yaml}"
+      run: prettier -c {staged_files}
     unit-tests:
       tags: test
-      run: "stack test --ghc-options '-Werror'"
+      run: "cabal test --ghc-options '-Werror'"
 commit-msg:
   commands:
     commitlint:
