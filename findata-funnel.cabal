@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           findata-funnel
-version:        2.15.0.1
+version:        2.16.0.0
 synopsis:       Combine Findata tools into e2e pipelines.
 description:    Please see the README on GitHub at <https://github.com/gregorias/findata-funnel#readme>
 category:       Finance
