@@ -21,7 +21,7 @@ import Turtle.Bytes qualified as TurtleB
 data Source parameters output where
   SourceBcge :: Source () Text
   SourceBcgeCc :: Source () ByteString
-  SourceCoopSupercard :: CoopSupercardParameters -> Source CoopSupercardParameters ()
+  SourceCoopSupercard :: Source () ()
   SourceCsBrokerageHistory :: Source () ByteString
   SourceCsEacHistory :: Source () ByteString
   SourceDegiroAccountStatement :: Source () Text
@@ -53,7 +53,7 @@ newtype RevolutParameters = RevolutParameters
 sourceToCommand :: Source a b -> Text
 sourceToCommand SourceBcge = "pull-bcge"
 sourceToCommand SourceBcgeCc = "pull-bcgecc"
-sourceToCommand (SourceCoopSupercard _) = "coop-supercard-pull"
+sourceToCommand SourceCoopSupercard = "coop-supercard-pull"
 sourceToCommand SourceCsBrokerageHistory = "pull-cs-account-history"
 sourceToCommand SourceCsEacHistory = "pull-cs-eac-history"
 sourceToCommand SourceDegiroAccountStatement = "degiro-account-pull"
@@ -70,28 +70,13 @@ sourceToCommand SourceSplitwise = "pull-splitwise"
 sourceToCommand SourceUberEats = "pull-uber-eats"
 
 sourceToParameters :: Source a b -> [Text]
-sourceToParameters
-  ( SourceCoopSupercard
-      ( CoopSupercardParameters
-          { coopSupercardParametersVerboseMode = verboseMode
-          , coopSupercardParametersHeadlessMode = headlessMode
-          }
-        )
-    ) =
-    [ case verboseMode of
-        CoopSupercardVerbose -> "--verbose"
-        CoopSupercardQuiet -> "--quiet"
-    , case headlessMode of
-        CoopSupercardHeadless -> "--headless"
-        CoopSupercardNoHeadless -> "--no-headless"
-    ]
 sourceToParameters (SourceRevolut (RevolutParameters{revolutParametersDownloadDirectory = downloadDirectory})) = ["--download-directory=" <> downloadDirectory]
 sourceToParameters _ = []
 
 convertTextToOutputType :: Source a output -> ByteString -> output
 convertTextToOutputType SourceBcge = decodeUtf8
 convertTextToOutputType SourceBcgeCc = id
-convertTextToOutputType (SourceCoopSupercard _) = const ()
+convertTextToOutputType SourceCoopSupercard = const ()
 convertTextToOutputType SourceCsBrokerageHistory = id
 convertTextToOutputType SourceCsEacHistory = id
 convertTextToOutputType SourceDegiroAccountStatement = decodeUtf8

@@ -1,82 +1,79 @@
 module Coop (
   pullCoopSupercardReceipts,
-  HeadlessMode (..),
-  VerboseMode (..),
-  FetchConfig (..),
-  defaultConfig,
+  parseReceiptPdfsToWallet,
 ) where
 
-import Control.Exception.Base
+import Control.Concurrent.Extra (threadDelay)
 import Control.Foldl qualified as Foldl
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Bool (bool)
-import Data.Either.Combinators (leftToMaybe)
+import Data.Time.Clock (secondsToDiffTime)
 import FindataFetcher qualified as FF
+import FindataTranscoder qualified as FT
 import PdfToText (
   PdfToTextInputMode (PttInputModeFilePath),
   PdfToTextMode (..),
-  PdfToTextOutputMode (PttOutputModeFilePath),
+  PdfToTextOutputMode (PttOutputModeStdOut),
   pdftotext,
  )
+import Relude (Text)
 import System.FilePath.Glob (compile, match)
 import Turtle (
   cd,
   ls,
   rm,
-  (<.>),
   (</>),
  )
 import Turtle qualified
-import Wallet (getWalletDir)
-
-data HeadlessMode = Headless | NoHeadless
-
-data VerboseMode = Verbose | Quiet
-
-data FetchConfig = FetchConfig
-  { fetchConfigHeadlessMode :: HeadlessMode
-  , fetchConfigVerboseMode :: VerboseMode
-  }
-
-defaultConfig :: FetchConfig
-defaultConfig = FetchConfig Headless Quiet
-
-textifyPdf ::
-  (MonadIO m) =>
-  -- | The target path in the wallet dir.
-  Turtle.FilePath ->
-  -- | The path to the PDF.
-  Turtle.FilePath ->
-  m ()
-textifyPdf subdir pdf = do
-  walletDir <- getWalletDir
-  let txtFile = walletDir </> subdir </> (pdf <.> "txt")
-  pdftotext Raw (PttInputModeFilePath pdf) (PttOutputModeFilePath txtFile)
+import Turtle.Extra qualified as Turtle
+import Wallet (appendTransactionToWallet, getWallet)
 
 -- | Pulls Coop Supercard receipts.
 --
 -- Throws an IO exception on failure.
-pullCoopSupercardReceipts :: (MonadIO m) => FF.CoopSupercardParameters -> m ()
-pullCoopSupercardReceipts params = do
-  -- The Coop fetcher may fail due to occasional CAPTCHA checks, so let's not
-  -- block textification if that happens.
-  ioException :: (Maybe IOException) <-
-    liftIO $ fmap leftToMaybe . try @IOException $ FF.run (FF.SourceCoopSupercard params)
-  textifyCoopPdfReceipts
-  maybe (return ()) (liftIO . throwIO) ioException
+pullCoopSupercardReceipts :: (MonadIO m) => m ()
+pullCoopSupercardReceipts = do
+  FF.run FF.SourceCoopSupercard
+  -- Let me click on all the download links before proceeding with processing.
+  liftIO $ threadDelay (secondsToDiffTime 25)
+  parseReceiptPdfsToWallet
+
+parseReceiptPdfsToWallet ::
+  (MonadIO m) =>
+  m ()
+parseReceiptPdfsToWallet = do
+  wallet <- getWallet
+  textifyCoopPdfReceipts wallet
  where
+  textifyCoopPdfReceipts :: (MonadIO m) => Turtle.FilePath -> m ()
+  textifyCoopPdfReceipts wallet = Turtle.reduce Foldl.mconcat $ do
+    cdDownloads
+    file <- ls "."
+    pdf <- bool Turtle.empty (return file) (match (compile "receipt_*.pdf") file)
+    receiptText <- textifyPdf pdf
+    (ledgerTransaction :: Text) <- transcodeReceiptText receiptText
+    appendTransactionToWallet wallet (Turtle.textToShell ledgerTransaction)
+    rm pdf
+
+  cdDownloads :: (MonadIO io) => io ()
+  cdDownloads = downloads >>= cd
+
   downloads :: (MonadIO io) => io Turtle.FilePath
   downloads = do
     homeDir <- Turtle.home
     return $ homeDir </> "Downloads"
 
-  cdDownloads :: (MonadIO io) => io ()
-  cdDownloads = downloads >>= cd
+-- | Textifies a Coop receipt PDF.
+textifyPdf ::
+  (MonadIO m) =>
+  -- | The path to the PDF.
+  Turtle.FilePath ->
+  m Text
+textifyPdf pdf = do
+  pdftotext Raw (PttInputModeFilePath pdf) PttOutputModeStdOut
 
-  textifyCoopPdfReceipts :: (MonadIO m) => m ()
-  textifyCoopPdfReceipts = Turtle.reduce Foldl.mconcat $ do
-    cdDownloads
-    file <- ls "."
-    pdf <- bool Turtle.empty (return file) (match (compile "Coop *.pdf") file)
-    textifyPdf "updates/coop-receipts" pdf
-    rm pdf
+-- | Transcodes receipt text into a Ledger transaction.
+transcodeReceiptText :: (MonadIO m) => Text -> m Text
+transcodeReceiptText receiptText = do
+  FT.findataTranscoder FT.FindataTranscoderCoop $
+    Turtle.posixLineToLine <$> Turtle.textToShell receiptText

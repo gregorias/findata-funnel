@@ -12,6 +12,7 @@ import Turtle qualified
 data FindataTranscoderSource
   = FindataTranscoderBcge
   | FindataTranscoderBcgeCc
+  | FindataTranscoderCoop
   | FindataTranscoderCsBrokerageAccount
   | FindataTranscoderCsEacAccount
   | FindataTranscoderDegiroAccount
@@ -30,6 +31,7 @@ data FindataTranscoderSource
 findataTranscoderSourceToCommand :: FindataTranscoderSource -> Text
 findataTranscoderSourceToCommand FindataTranscoderBcge = "parse-bcge"
 findataTranscoderSourceToCommand FindataTranscoderBcgeCc = "parse-bcge-cc"
+findataTranscoderSourceToCommand FindataTranscoderCoop = "parse-coop"
 findataTranscoderSourceToCommand FindataTranscoderCsBrokerageAccount = "parse-cs-brokerage-account-history"
 findataTranscoderSourceToCommand FindataTranscoderCsEacAccount = "parse-cs-eac-history"
 findataTranscoderSourceToCommand FindataTranscoderDegiroAccount = "parse-degiro-account"

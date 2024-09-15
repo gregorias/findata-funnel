@@ -29,6 +29,7 @@ library
       Auto
       Bcge
       CLI
+      Control.Concurrent.Extra
       Control.Exception.Extra
       Control.Funnel
       Coop
@@ -67,14 +68,15 @@ library
       Glob
     , base >=4.18 && <5
     , bytestring
-    , either
     , extra
     , foldl
     , managed
     , mtl
     , optparse-applicative
     , parallel-io
+    , relude
     , text
+    , time
     , turtle
   default-language: GHC2021
 

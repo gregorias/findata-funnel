@@ -160,10 +160,12 @@ individualPipesP =
             pullBcgeCc
         , pullCommand
             "coop-supercard"
-            "Pulls Coop Supercard receipts and saves it in a Ledger file in the wallet directory."
-            ( Coop.pullCoopSupercardReceipts
-                (FF.CoopSupercardParameters FF.CoopSupercardNoHeadless FF.CoopSupercardVerbose)
-            )
+            "Pulls Coop Supercard receipts (you need to manually log in and download) and saves it in a Ledger file in the wallet directory."
+            Coop.pullCoopSupercardReceipts
+        , command'
+            "coop-parse-receipt-pdfs-to-wallet"
+            "Parses Coop receipt PDFs to Ledger text and writes them to the wallet."
+            Coop.parseReceiptPdfsToWallet
         , pullCommand
             "cs-brokerage-account"
             "Pulls Charles Schwab brokerage account's transaction history into a Ledger file in the wallet directory."
@@ -215,10 +217,12 @@ individualPipesP =
         ]
     )
  where
-  pullCommand title description action =
+  command' title description action =
     command
-      ("pull-" <> title)
+      title
       ( info
           (pure action <**> helper)
           (progDesc description)
       )
+
+  pullCommand title = command' ("pull-" <> title)

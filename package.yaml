@@ -70,7 +70,6 @@ library:
     - -Wunused-packages
   dependencies:
     - bytestring
-    - either
     - extra
     - foldl
     - Glob
@@ -78,7 +77,9 @@ library:
     - mtl
     - optparse-applicative
     - parallel-io
+    - relude
     - text
+    - time
     - turtle
 
 executables:
