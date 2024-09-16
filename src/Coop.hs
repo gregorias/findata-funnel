@@ -8,6 +8,7 @@ import Control.Foldl qualified as Foldl
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Bool (bool)
 import Data.Time.Clock (secondsToDiffTime)
+import Findata (ledgersort)
 import FindataFetcher qualified as FF
 import FindataTranscoder qualified as FT
 import PdfToText (
@@ -44,6 +45,7 @@ parseReceiptPdfsToWallet ::
 parseReceiptPdfsToWallet = do
   wallet <- getWallet
   textifyCoopPdfReceipts wallet
+  ledgersort
  where
   textifyCoopPdfReceipts :: (MonadIO m) => Turtle.FilePath -> m ()
   textifyCoopPdfReceipts wallet = Turtle.reduce Foldl.mconcat $ do
