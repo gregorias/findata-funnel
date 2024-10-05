@@ -22,8 +22,6 @@ data Source parameters output where
   SourceBcge :: Source () Text
   SourceBcgeCc :: Source () ByteString
   SourceCoopSupercard :: Source () ()
-  SourceCsBrokerageHistory :: Source () ByteString
-  SourceCsEacHistory :: Source () ByteString
   SourceDegiroAccountStatement :: Source () Text
   SourceDegiroPortfolio :: Source () Text
   SourceEasyRide :: Source () ()
@@ -54,8 +52,6 @@ sourceToCommand :: Source a b -> Text
 sourceToCommand SourceBcge = "pull-bcge"
 sourceToCommand SourceBcgeCc = "pull-bcgecc"
 sourceToCommand SourceCoopSupercard = "coop-supercard-pull"
-sourceToCommand SourceCsBrokerageHistory = "pull-cs-account-history"
-sourceToCommand SourceCsEacHistory = "pull-cs-eac-history"
 sourceToCommand SourceDegiroAccountStatement = "degiro-account-pull"
 sourceToCommand SourceDegiroPortfolio = "degiro-portfolio-pull"
 sourceToCommand SourceEasyRide = "pull-easyride-receipts"
@@ -77,8 +73,6 @@ convertTextToOutputType :: Source a output -> ByteString -> output
 convertTextToOutputType SourceBcge = decodeUtf8
 convertTextToOutputType SourceBcgeCc = id
 convertTextToOutputType SourceCoopSupercard = const ()
-convertTextToOutputType SourceCsBrokerageHistory = id
-convertTextToOutputType SourceCsEacHistory = id
 convertTextToOutputType SourceDegiroAccountStatement = decodeUtf8
 convertTextToOutputType SourceDegiroPortfolio = decodeUtf8
 convertTextToOutputType SourceEasyRide = const ()

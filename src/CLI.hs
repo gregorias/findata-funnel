@@ -11,7 +11,6 @@ import Data.Bool (bool)
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Text qualified as T
-import Data.Text.Encoding (decodeUtf8)
 import Data.Text.IO qualified as T
 import Degiro (
   pullDegiroAccountStatement,
@@ -61,28 +60,6 @@ pullBcgeCc = do
   walletDir <- getWalletDir
   let bcgeCcLedger :: FilePath = walletDir </> "updates/bcge-cc.ledger"
   liftIO $ T.appendFile bcgeCcLedger ledger
-
-pullCsBrokerageAccount :: (MonadIO m) => m ()
-pullCsBrokerageAccount = do
-  csStatement :: Text <- decodeUtf8 <$> FF.run FF.SourceCsBrokerageHistory
-  ledger :: Text <-
-    findataTranscoder FindataTranscoderCsBrokerageAccount $
-      posixLineToLine
-        <$> textToShell csStatement
-  walletDir <- getWalletDir
-  let csLedger :: FilePath = walletDir </> "updates/charles-schwab-brokerage.ledger"
-  liftIO $ T.appendFile csLedger ledger
-
-pullCsEacAccount :: (MonadIO m) => m ()
-pullCsEacAccount = do
-  csStatement :: Text <- decodeUtf8 <$> FF.run FF.SourceCsEacHistory
-  ledger :: Text <-
-    findataTranscoder FindataTranscoderCsEacAccount $
-      posixLineToLine
-        <$> textToShell csStatement
-  walletDir <- getWalletDir
-  let csLedger :: FilePath = walletDir </> "updates/charles-schwab-eac.ledger"
-  liftIO $ T.appendFile csLedger ledger
 
 pullFinpension :: (MonadIO m) => m ()
 pullFinpension = do
@@ -166,14 +143,6 @@ individualPipesP =
             "coop-parse-receipt-pdfs-to-wallet"
             "Parses Coop receipt PDFs to Ledger text and writes them to the wallet."
             Coop.parseReceiptPdfsToWallet
-        , pullCommand
-            "cs-brokerage-account"
-            "Pulls Charles Schwab brokerage account's transaction history into a Ledger file in the wallet directory."
-            pullCsBrokerageAccount
-        , pullCommand
-            "cs-eac-account"
-            "Pulls Charles Schwab EAC account's transaction history into a Ledger file in the wallet directory."
-            pullCsEacAccount
         , pullCommand
             "degiro-account-statement"
             "Pulls Degiro account statement and appends it to the wallet."
