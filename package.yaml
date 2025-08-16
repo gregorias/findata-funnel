@@ -4,7 +4,7 @@ github: "gregorias/findata-funnel"
 license: AGPL-3
 author: "Grzegorz Milka"
 maintainer: "grzegorzmilka@gmail.com"
-copyright: "2021-2024 Grzegorz Milka"
+copyright: "2021-2025 Grzegorz Milka"
 
 extra-source-files:
   - README.md
@@ -19,7 +19,7 @@ category: Finance
 description: Please see the README on GitHub at <https://github.com/gregorias/findata-funnel#readme>
 
 dependencies:
-  - base >= 4.18 && < 5
+  - base >= 4.20 && < 5
 
 language: GHC2021
 
