@@ -67,6 +67,7 @@ library
   ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -Wunused-packages
   build-depends:
       Glob
+    , aeson
     , base >=4.20 && <5
     , bytestring
     , extra

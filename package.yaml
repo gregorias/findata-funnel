@@ -69,6 +69,7 @@ library:
   ghc-options:
     - -Wunused-packages
   dependencies:
+    - aeson
     - bytestring
     - extra
     - foldl

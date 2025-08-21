@@ -20,7 +20,7 @@ main = join $ execParser mainP
  where
   mainP =
     info
-      (CLI.individualPipesP <**> helper <**> simpleVersioner (showVersion version))
+      (CLI.main <**> helper <**> simpleVersioner (showVersion version))
       ( fullDesc
           <> header "findata-funnel"
           <> progDesc "Orchestrates findata tools to automate moving financial data to the wallet."

@@ -1,5 +1,6 @@
 module GPayslip (
   pullGooglePayslips,
+  GPayslipConfig (..),
   moveGPayslipToWallet,
 ) where
 
@@ -7,10 +8,13 @@ import Control.Foldl qualified as Foldl
 import Control.Monad.Except (MonadError (catchError, throwError), runExceptT)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Managed qualified as Managed
+import Data.Aeson (FromJSON (parseJSON), genericParseJSON)
+import Data.Aeson qualified as Aeson
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import FindataTranscoder
+import GHC.Generics (Generic)
 import PdfToText (PdfToTextInputMode (..), PdfToTextMode (..), PdfToTextOutputMode (PttOutputModeFilePath, PttOutputModeStdOut), pdftotext)
 import Turtle (Line, Shell, home, ls, (</>))
 import Turtle qualified
@@ -53,14 +57,27 @@ moveGPayslipToWallet wallet pdf = flip catchError prependContext $ do
           T.readFile tmpTxt <$ maybeSuccess
     either throwError return maybeContent
 
+newtype GPayslipConfig = GPayslipConfig
+  { gpcTargetDir :: Turtle.FilePath
+  }
+  deriving stock (Generic, Show)
+
+instance FromJSON GPayslipConfig where
+  parseJSON =
+    genericParseJSON
+      ( Aeson.defaultOptions
+          { Aeson.fieldLabelModifier = drop 3
+          }
+      )
+
 -- | Pulls Google Payslips to the wallet.
 --
 -- Throws an IO exception on failure.
-pullGooglePayslips :: (MonadIO io) => io ()
-pullGooglePayslips = do
+pullGooglePayslips :: (MonadIO io) => GPayslipConfig -> io ()
+pullGooglePayslips config = do
   homeDir <- home
   let payslipSourceDir = homeDir </> T.unpack "Google Drive/My Drive/Payslips"
-  let payslipTargetDir = homeDir </> T.unpack "Documents/Job/Google/Payslips"
+  let payslipTargetDir = homeDir </> config.gpcTargetDir
   Turtle.reduce Foldl.mconcat $ do
     payslipSource <- ls payslipSourceDir
     let payslipTarget = payslipTargetDir </> Turtle.filename payslipSource
